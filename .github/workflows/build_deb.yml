@@ -1,0 +1,37 @@
+name: Repository Dispatch
+
+on:
+  repository_dispatch:
+    types: [build_deb]
+
+jobs:
+  buildEvent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: make-deb-${{ github.event.client_payload.pkgname }}
+        run: make build-${{ github.event.client_payload.pkgname }} COMMIT=${{ github.event.client_payload.commit }} PKGVERSION=${{ github.event.client_payload.version }}
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: deb
+          path: pkg/*.deb
+
+      - name: Create a Release
+        uses: meeDamian/github-release@2.0
+        with:
+          token: ${{ secrets.ACTION_DISPATCH }}
+          tag: ${{ steps.build.outputs.pkgname }}-${{ steps.build.outputs.release }}
+          name: ${{ steps.build.outputs.pkgname }} - ${{ steps.build.outputs.release }}
+          prerelease: ${{ steps.build.outputs.prerelease == true || steps.build.outputs.prerelease == 'true' }}
+          files: pkg/*.deb
+          gzip: false
+
+      - name: Update repo cache
+        uses: distributhor/workflow-webhook@v3
+        env:
+          webhook_url: ${{ secrets.WEBHOOK_URL }}
+          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
