@@ -1,6 +1,6 @@
 VERSION?=1.0.0
-PKGNAME?=calaos-server
-IMAGE_SRC?=ghcr.io/calaos/calaos_base
+PKGNAME?=calaos-influxdb
+IMAGE_SRC?=docker.io/influxdb
 
 TOP_DIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 

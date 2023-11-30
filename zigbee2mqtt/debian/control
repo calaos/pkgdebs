@@ -1,4 +1,4 @@
-Source: calaos-server
+Source: calaos-zigbee2mqtt
 Section: admin
 Priority: optional
 Maintainer: Calaos Team <team@calaos.fr>
@@ -6,8 +6,8 @@ Build-Depends: debhelper (>= 11), pkgconf
 Standards-Version: 4.6.2
 Homepage: https://calaos.fr
 
-Package: calaos-server
+Package: calaos-zigbee2mqtt
 Architecture: any
-Description: Calaos Server service
- Calaos Server is the main service of Calaos project.
+Description: Calaos zigbee2mqtt container service
+ This package is the containerized version that calaos-os needs to run
 Depends: podman, calaos-container

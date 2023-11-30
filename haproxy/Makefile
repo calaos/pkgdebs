@@ -1,6 +1,6 @@
 VERSION?=1.0.0
-PKGNAME?=calaos-server
-IMAGE_SRC?=ghcr.io/calaos/calaos_base
+PKGNAME?=calaos-haproxy
+IMAGE_SRC?=docker.io/haproxy
 
 TOP_DIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 
@@ -34,4 +34,5 @@ deb:
 	@dpkg-buildpackage -us -uc -b
 
 install:
+	install -Dm755 haproxy_pre $(DESTDIR)$(PREFIX)/sbin/haproxy_pre
 	install -Dm644 container.source $(DESTDIR)$(PREFIX)/usr/share/calaos/$(PKGNAME).source

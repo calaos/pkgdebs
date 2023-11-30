@@ -1,6 +1,6 @@
 VERSION?=1.0.0
-PKGNAME?=calaos-server
-IMAGE_SRC?=ghcr.io/calaos/calaos_base
+PKGNAME?=calaos-zigbee2mqtt
+IMAGE_SRC?=docker.io/koenkk/zigbee2mqtt
 
 TOP_DIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 
@@ -34,4 +34,6 @@ deb:
 	@dpkg-buildpackage -us -uc -b
 
 install:
+	install -Dm755 zigbee2mqtt_pre $(DESTDIR)$(PREFIX)/sbin/zigbee2mqtt_pre
+	install -Dm755 start_z2mqtt $(DESTDIR)$(PREFIX)/sbin/start_z2mqtt
 	install -Dm644 container.source $(DESTDIR)$(PREFIX)/usr/share/calaos/$(PKGNAME).source

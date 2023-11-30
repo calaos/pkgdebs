@@ -1,5 +1,5 @@
 [Unit]
-Description=calaos-server container
+Description=influxdb container
 After=local-fs.target
 Requires=network.target
 After=network.target
@@ -8,7 +8,7 @@ RequiresMountsFor=/mnt/calaos
 [Service]
 Restart=always
 ExecStartPre=/usr/sbin/init_calaosfs
-ExecStartPre=/usr/sbin/load_containers_cache calaos-server ghcr.io/calaos/calaos_base
+ExecStartPre=/usr/sbin/load_containers_cache influxdb docker.io/influxdb
 KillMode=mixed
 ExecStop=/usr/bin/podman rm -f -i --cidfile=%t/%N.cid
 ExecStopPost=-/usr/bin/podman rm -f -i --cidfile=%t/%N.cid
@@ -18,15 +18,13 @@ Type=notify
 NotifyAccess=all
 SyslogIdentifier=%N
 ExecStart=/usr/bin/podman run \
-        --name=calaos-server \
+        --name=influxdb \
         --cidfile=%t/%N.cid --replace --rm --cgroups=split --tz=local \
         --sdnotify=conmon -d \
-        -v /mnt/calaos/cache:/root/.cache/calaos/ \
-        -v /mnt/calaos/config:/root/.config/calaos \
-        -v /run/calaos:/run/calaos \
+        -v /mnt/calaos/influxdb/data:/var/lib/influxdb2 \
+        -v /mnt/calaos/influxdb/config:/etc/influxdb2 \
         --network=host \
-        ghcr.io/calaos/calaos_base \
-        /opt/bin/calaos_server
+        docker.io/influxdb
 
 [Install]
 WantedBy=multi-user.target

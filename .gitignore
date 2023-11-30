@@ -18,6 +18,7 @@ calaos-server/debian/calaos-server
 
 pkg
 src
+container.source
 
 calaos-ddns/calaos-ddns
 calaos-home/calaos_mobile

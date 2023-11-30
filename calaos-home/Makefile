@@ -1,6 +1,6 @@
 VERSION?=1.0.0
-PKGNAME?=calaos-server
-IMAGE_SRC?=ghcr.io/calaos/calaos_base
+PKGNAME?=calaos-home
+IMAGE_SRC?=ghcr.io/calaos/calaos_home
 
 TOP_DIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 
@@ -34,4 +34,5 @@ deb:
 	@dpkg-buildpackage -us -uc -b
 
 install:
+	install -Dm755 start_calaos_home $(DESTDIR)$(PREFIX)/sbin/start_calaos_home
 	install -Dm644 container.source $(DESTDIR)$(PREFIX)/usr/share/calaos/$(PKGNAME).source
