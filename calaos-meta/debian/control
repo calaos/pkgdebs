@@ -1,0 +1,21 @@
+Source: calaos
+Section: admin
+Priority: optional
+Maintainer: Calaos Team <team@calaos.fr>
+Build-Depends: debhelper (>= 11), pkgconf
+Standards-Version: 4.6.2
+Homepage: https://calaos.fr
+
+Package: calaos
+Architecture: all
+Description: Meta package for Calaos-OS
+ This package is the Calaos meta package that pulls all calaos dependencies
+Depends: calaos-container,
+         calaos-server,
+         calaos-home,
+         calaos-ddns,
+         calaos-haproxy,
+         calaos-mosquitto,
+         calaos-zigbee2mqtt,
+         calaos-influxdb,
+         calaos-grafana,

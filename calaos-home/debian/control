@@ -7,7 +7,7 @@ Standards-Version: 4.6.2
 Homepage: https://calaos.fr
 
 Package: calaos-home
-Architecture: any
+Architecture: all
 Description: Calaos Home Touchscreen service
  Calaos Home is the touchscreen GUI service of Calaos project.
 Depends: podman, calaos-container

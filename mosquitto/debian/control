@@ -7,7 +7,7 @@ Standards-Version: 4.6.2
 Homepage: https://calaos.fr
 
 Package: calaos-mosquitto
-Architecture: any
+Architecture: all
 Description: Calaos mosquitto container service
  This package is the containerized version that calaos-os needs to run
 Depends: podman, calaos-container

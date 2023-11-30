@@ -7,7 +7,7 @@ Standards-Version: 4.6.2
 Homepage: https://calaos.fr
 
 Package: calaos-server
-Architecture: any
+Architecture: all
 Description: Calaos Server service
  Calaos Server is the main service of Calaos project.
 Depends: podman, calaos-container
