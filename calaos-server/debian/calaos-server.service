@@ -24,6 +24,7 @@ ExecStart=/usr/bin/podman run \
         -v /mnt/calaos/cache:/root/.cache/calaos/ \
         -v /mnt/calaos/config:/root/.config/calaos \
         -v /run/calaos:/run/calaos \
+        --privileged -v /dev/bus/usb:/dev/bus/usb \
         --network=host \
         ghcr.io/calaos/calaos_base \
         /opt/bin/calaos_server
