@@ -1,6 +1,6 @@
 VERSION?=1.0.0
 PKGNAME?=calaos-server
-IMAGE_SRC?=ghcr.io/calaos/calaos_base
+IMAGE_SRC?=ghcr.io/calaos/calaos_base:$(VERSION)
 
 TOP_DIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 
@@ -9,8 +9,9 @@ TOP_DIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 all: build
 
 build:
-	@echo "Building package $(VERSION)"
-	@echo "$(IMAGE_SRC):$(VERSION)" > $(TOP_DIR)/container.source
+	@echo "Building package: $(VERSION)"
+	@echo "Using image: $(IMAGE_SRC)"
+	@echo "$(IMAGE_SRC)" > $(TOP_DIR)/container.source
 
 clean:
 	@rm -rf $(TOP_DIR)/pkg $(TOP_DIR)/build \

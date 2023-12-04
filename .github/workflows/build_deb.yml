@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: make-deb-${{ github.event.client_payload.pkgname }}
-        run: make build-${{ github.event.client_payload.pkgname }} COMMIT=${{ github.event.client_payload.commit }} PKGVERSION=${{ github.event.client_payload.version }}
+        run: make build-${{ github.event.client_payload.pkgname }} PKGVERSION=${{ github.event.client_payload.version }} IMAGE_SRC=${{ github.event.client_payload.image_src }}
       
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
@@ -24,8 +24,8 @@ jobs:
         uses: meeDamian/github-release@2.0
         with:
           token: ${{ secrets.ACTION_DISPATCH }}
-          tag: ${{ steps.build.outputs.pkgname }}-${{ steps.build.outputs.release }}
-          name: ${{ steps.build.outputs.pkgname }} - ${{ steps.build.outputs.release }}
+          tag: ${{ github.event.client_payload.pkgname }}-${{ github.event.client_payload.version }}
+          name: ${{ github.event.client_payload.pkgname }} - ${{ github.event.client_payload.version }}
           prerelease: ${{ steps.build.outputs.prerelease == true || steps.build.outputs.prerelease == 'true' }}
           files: pkg/*.deb
           gzip: false

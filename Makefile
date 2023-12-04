@@ -3,6 +3,7 @@ DOCKER_TAG ?= latest
 DOCKER_COMMAND = docker run -t -v $(PWD):/src --rm -w /src --privileged=true
 
 PKGVERSION :=
+IMAGE_SRC :=
 
 print_green = /bin/echo -e "\x1b[32m$1\x1b[0m"
 
@@ -27,7 +28,7 @@ all:
 	@ echo
 	@$(call print_green,"Variables values    :")
 	@$(call print_green,"=====================")
-	@$(call print_green,"example : make calaos-os NOCACHE=0")
+	@$(call print_green,"example : make build-calaos-meta")
 	@ echo
 	@ echo "NOCACHE = ${NOCACHE}            # Set to 0 if you want to accelerate Docker image build by using cache. default value NOCACHE=1. "
 	@ echo
@@ -43,5 +44,5 @@ docker-rm:
 	@docker image rm $(DOCKER_IMAGE_NAME):$(DOCKER_TAG)
 
 build-%: docker-init
-	@$(call print_green,"Building $* PKGVERSION=$(PKGVERSION)")
-	@$(DOCKER_COMMAND) -v .:/work $(DOCKER_IMAGE_NAME):$(DOCKER_TAG) /build_deb "$*" "$(PKGVERSION)"
+	@$(call print_green,"Building $* PKGVERSION=$(PKGVERSION) IMAGE_SRC=$(IMAGE_SRC)")
+	@$(DOCKER_COMMAND) -v .:/work $(DOCKER_IMAGE_NAME):$(DOCKER_TAG) /build_deb "$*" "$(PKGVERSION)" "$(IMAGE_SRC)"

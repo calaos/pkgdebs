@@ -1,6 +1,6 @@
 VERSION?=1.0.0
 PKGNAME?=calaos-grafana
-IMAGE_SRC?=docker.io/grafana/grafana-oss
+IMAGE_SRC?=docker.io/grafana/grafana-oss:$(VERSION)
 
 TOP_DIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 
@@ -10,7 +10,8 @@ all: build
 
 build:
 	@echo "Building package $(VERSION)"
-	@echo "$(IMAGE_SRC):$(VERSION)" > $(TOP_DIR)/container.source
+	@echo "Using image: $(IMAGE_SRC)"
+	@echo "$(IMAGE_SRC)" > $(TOP_DIR)/container.source
 
 clean:
 	@rm -rf $(TOP_DIR)/pkg $(TOP_DIR)/build \
