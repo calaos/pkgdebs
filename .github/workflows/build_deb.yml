@@ -23,7 +23,7 @@ jobs:
       - name: Create a Release
         uses: meeDamian/github-release@2.0
         with:
-          token: ${{ secrets.ACTION_DISPATCH }}
+          token: ${{ secrets.CALAOS_REL_TOKEN }}
           tag: ${{ github.event.client_payload.pkgname }}-${{ github.event.client_payload.version }}
           name: ${{ github.event.client_payload.pkgname }} - ${{ github.event.client_payload.version }}
           prerelease: ${{ github.event.client_payload.prerelease == true }}
@@ -33,5 +33,5 @@ jobs:
       - name: Update repo cache
         uses: distributhor/workflow-webhook@v3
         env:
-          webhook_url: ${{ secrets.WEBHOOK_URL }}
-          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
+          webhook_url: ${{ secrets.DEB_REPO_WEBHOOK_URL }}
+          webhook_secret: ${{ secrets.DEB_REPO_WEBHOOK_SECRET }}
