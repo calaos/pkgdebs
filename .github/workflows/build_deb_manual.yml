@@ -1,0 +1,62 @@
+name: Build manual deb
+
+on:
+  workflow_dispatch:
+    inputs:
+      pkgname:
+        description: 'Package name'
+        required: true
+        type: choice
+        default: 'calaos-meta'
+        options:
+          - calaos-meta
+          - calaos-server
+          - calaos-home
+          - grafana
+          - influxdb
+          - mosquitto
+          - haproxy
+          - zigbee2mqtt
+      version:
+        description: 'Package version'
+        required: true
+      image_src:
+        description: 'Image source'
+        required: true
+      prerelease:
+        description: 'Is this a prerelease?'
+        required: true
+        type: boolean
+  
+
+jobs:
+  buildEvent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: make-deb-${{ github.event.inputs.pkgname }}
+        run: make build-${{ github.event.inputs.pkgname }} PKGVERSION=${{ github.event.inputs.version }} IMAGE_SRC=${{ github.event.inputs.image_src }}
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: deb
+          path: pkg/*.deb
+
+      - name: Create a Release
+        uses: meeDamian/github-release@2.0
+        with:
+          token: ${{ secrets.CALAOS_REL_TOKEN }}
+          tag: ${{ github.event.inputs.pkgname }}-${{ github.event.inputs.version }}
+          name: ${{ github.event.inputs.pkgname }} - ${{ github.event.inputs.version }}
+          prerelease: ${{ github.event.inputs.prerelease == true || github.event.inputs.prerelease == 'true' }}
+          files: pkg/*.deb
+          gzip: false
+
+      - name: Update repo cache
+        uses: distributhor/workflow-webhook@v3
+        env:
+          webhook_url: ${{ secrets.DEB_REPO_WEBHOOK_URL }}
+          webhook_secret: ${{ secrets.DEB_REPO_WEBHOOK_SECRET }}
