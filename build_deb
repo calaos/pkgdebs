@@ -62,7 +62,7 @@ sed -i "s/VERSION?=.*$/VERSION?=$pkgversion/g" Makefile
 
 if [ -n "$image_src" ]
 then
-    sed -i "s/IMAGE_SRC?=.*$/IMAGE_SRC?=$image_src/g" Makefile
+    sed -i "s|IMAGE_SRC?=.*$|IMAGE_SRC?=$image_src|g" Makefile
 fi
 
 pkg_name=$(grep "Package: " debian/control | sed 's/Package: //')
