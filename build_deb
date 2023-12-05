@@ -40,7 +40,7 @@ err()
 }
 
 pkgname=$1
-pkgversion=$(echo $2 | tr - _)
+pkgversion=$2
 image_src=$3
 workdir="/work"
 
