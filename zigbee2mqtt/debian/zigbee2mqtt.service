@@ -1,7 +1,7 @@
 [Unit]
 Description=Zigbee2mqtt container
-After=local-fs.target
-Requires=network.target
+After=local-fs.target calaos-boot.service
+Requires=network.target calaos-boot.service
 After=network.target
 RequiresMountsFor=/mnt/calaos
 
