@@ -32,5 +32,8 @@ podman run \
         --sdnotify=conmon -d \
         -v /mnt/calaos/zigbee2mqtt:/app/data \
         --network=host \
+        --pull=never \
+        --replace \
+        --tz=local \
         $(append_dev_opts) \
         docker.io/koenkk/zigbee2mqtt

@@ -9,7 +9,6 @@ RequiresMountsFor=/mnt/calaos
 Restart=always
 ExecStartPre=/usr/sbin/init_calaosfs
 ExecStartPre=/usr/sbin/zigbee2mqtt_pre
-ExecStartPre=/usr/sbin/load_containers_cache zigbee2mqtt docker.io/koenkk/zigbee2mqtt
 KillMode=mixed
 ExecStop=/usr/bin/podman rm -f -i --cidfile=%t/%N.cid
 ExecStopPost=-/usr/bin/podman rm -f -i --cidfile=%t/%N.cid

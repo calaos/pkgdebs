@@ -9,7 +9,6 @@ RequiresMountsFor=/mnt/calaos
 Restart=always
 ExecStartPre=/usr/sbin/init_calaosfs
 ExecStartPre=/usr/sbin/mosquitto_pre
-ExecStartPre=/usr/sbin/load_containers_cache mosquitto docker.io/eclipse-mosquitto
 KillMode=mixed
 ExecStop=/usr/bin/podman rm -f -i --cidfile=%t/%N.cid
 ExecStopPost=-/usr/bin/podman rm -f -i --cidfile=%t/%N.cid
@@ -25,6 +24,9 @@ ExecStart=/usr/bin/podman run \
         -v /mnt/calaos/mosquitto/config:/mosquitto/config \
         -v /mnt/calaos/mosquitto/data:/mosquitto/data \
         --network=host \
+        --pull=never \
+        --replace \
+        --tz=local \
         docker.io/eclipse-mosquitto
 
 [Install]

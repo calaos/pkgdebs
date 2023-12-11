@@ -8,7 +8,6 @@ RequiresMountsFor=/mnt/calaos
 [Service]
 Restart=always
 ExecStartPre=/usr/sbin/init_calaosfs
-ExecStartPre=/usr/sbin/load_containers_cache calaos-home ghcr.io/calaos/calaos_home
 KillMode=mixed
 ExecStop=/usr/bin/podman rm -f -i --cidfile=%t/%N.cid
 ExecStopPost=-/usr/bin/podman rm -f -i --cidfile=%t/%N.cid

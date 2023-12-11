@@ -8,7 +8,6 @@ RequiresMountsFor=/mnt/calaos
 [Service]
 Restart=always
 ExecStartPre=/usr/sbin/init_calaosfs
-ExecStartPre=/usr/sbin/load_containers_cache grafana docker.io/grafana/grafana-oss
 KillMode=mixed
 ExecStop=/usr/bin/podman rm -f -i --cidfile=%t/%N.cid
 ExecStopPost=-/usr/bin/podman rm -f -i --cidfile=%t/%N.cid
@@ -23,6 +22,9 @@ ExecStart=/usr/bin/podman run \
         --sdnotify=conmon -d \
         -v /mnt/calaos/grafana/data:/var/lib/grafana \
         --network=host \
+        --pull=never \
+        --replace \
+        --tz=local \
         docker.io/grafana/grafana-oss
 
 [Install]
