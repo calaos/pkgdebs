@@ -16,6 +16,7 @@ Delegate=yes
 Type=notify
 NotifyAccess=all
 SyslogIdentifier=%N
+EnvironmentFile=/usr/share/calaos/calaos-home.source
 
 ExecStart=/usr/sbin/start_calaos_home %t/%N.cid
 

@@ -16,6 +16,8 @@ Delegate=yes
 Type=notify
 NotifyAccess=all
 SyslogIdentifier=%N
+EnvironmentFile=/usr/share/calaos/calaos-server.source
+
 ExecStart=/usr/bin/podman run \
         --name=calaos-server \
         --cidfile=%t/%N.cid --replace --rm --cgroups=split --tz=local \
@@ -28,7 +30,7 @@ ExecStart=/usr/bin/podman run \
         --pull=never \
         --replace \
         --tz=local \
-        ghcr.io/calaos/calaos_base \
+        ${IMAGE_SRC} \
         /opt/bin/calaos_server
 
 [Install]

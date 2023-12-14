@@ -11,7 +11,7 @@ all: build
 build:
 	@echo "Building package $(VERSION)"
 	@echo "Using image: $(IMAGE_SRC)"
-	@echo "$(IMAGE_SRC)" > $(TOP_DIR)/container.source
+	@echo "IMAGE_SRC=$(IMAGE_SRC)" > $(TOP_DIR)/container.source
 
 clean:
 	@rm -rf $(TOP_DIR)/pkg $(TOP_DIR)/build \

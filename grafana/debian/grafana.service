@@ -16,6 +16,8 @@ Delegate=yes
 Type=notify
 NotifyAccess=all
 SyslogIdentifier=%N
+EnvironmentFile=/usr/share/calaos/calaos-grafana.source
+
 ExecStart=/usr/bin/podman run \
         --name=grafana \
         --cidfile=%t/%N.cid --replace --rm --cgroups=split --tz=local \
@@ -25,7 +27,7 @@ ExecStart=/usr/bin/podman run \
         --pull=never \
         --replace \
         --tz=local \
-        docker.io/grafana/grafana-oss
+        ${IMAGE_SRC}
 
 [Install]
 WantedBy=multi-user.target

@@ -36,4 +36,4 @@ podman run \
         --replace \
         --tz=local \
         $(append_dev_opts) \
-        docker.io/koenkk/zigbee2mqtt
+        ${IMAGE_SRC}
