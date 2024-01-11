@@ -74,7 +74,7 @@ podman run \
         --pull=never \
         --replace \
         --tz=local \
-        --mount type=bind,source=/var/run/dbus,target=/var/run/dbus \
+        --mount type=bind,source=/run/dbus,target=/run/dbus \
         --mount type=bind,source=/run/udev/data,target=/run/udev/data,readonly \
         $(append_gpu_opts) \
         $(append_input_opts) \
