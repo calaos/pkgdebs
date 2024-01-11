@@ -38,6 +38,14 @@ append_input_opts()
     done < <(devicelist_input)
 }
 
+vgadev=$(lspci | grep -i "VGA compatible controller")
+gpudriver=""
+
+if [[ $vgadev == *"Alder Lake-N"* ]]; then
+    echo "Alder Lake-N (UHD Graphics) detected, using default modsetting driver"
+    gpudriver="--modsetting"
+fi
+
 # shellcheck disable=SC2046
 
 podman run \
@@ -59,5 +67,5 @@ podman run \
         --mount type=bind,source=/run/udev/data,target=/run/udev/data,readonly \
         $(append_gpu_opts) \
         $(append_input_opts) \
-        ${IMAGE_SRC} \
-        /usr/bin/start.sh
+        "${IMAGE_SRC}" \
+        /usr/bin/start.sh "$gpudriver"
