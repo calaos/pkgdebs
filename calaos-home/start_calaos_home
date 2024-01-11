@@ -46,7 +46,7 @@ if [[ $vgadev == *"Alder Lake-N"* ]]; then
     gpudriver="--modsetting"
 fi
 
-## Other hardware woprkaround can be added here later
+## Other hardware workaround can be added here later
 
 cconf=$(podman exec calaos-server /opt/bin/calaos_config get gpu_modsetting)
 if [[ $cconf == "true" ]]; then
