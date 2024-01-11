@@ -46,6 +46,17 @@ if [[ $vgadev == *"Alder Lake-N"* ]]; then
     gpudriver="--modsetting"
 fi
 
+## Other hardware woprkaround can be added here later
+
+cconf=$(calaos_config get gpu_modsetting)
+if [[ $cconf == "true" ]]; then
+    echo "Modsetting driver forced by calaos_config"
+    gpudriver="--modsetting"
+elif [[ $cconf == "false" ]]; then
+    echo "Intel driver forced by calaos_config"
+    gpudriver=""
+fi
+
 # shellcheck disable=SC2046
 
 podman run \
