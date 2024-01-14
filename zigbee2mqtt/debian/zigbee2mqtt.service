@@ -18,7 +18,7 @@ Type=notify
 NotifyAccess=all
 SyslogIdentifier=%N
 ExecStart=/usr/sbin/start_z2mqtt %t/%N.cid
-EnvironmentFile=/usr/share/calaos/calaos-Zigbee2mqtt.source
+EnvironmentFile=/usr/share/calaos/calaos-zigbee2mqtt.source
 
 [Install]
 WantedBy=multi-user.target
