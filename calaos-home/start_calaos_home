@@ -65,6 +65,7 @@ podman run \
         --sdnotify=conmon -d \
         -v /mnt/calaos/cache:/root/.cache/calaos/ \
         -v /mnt/calaos/config:/etc/calaos \
+	-v /mnt/calaos/xorg.conf.d:/etc/X11/xorg.conf.d \
         -v /run/calaos:/run/calaos \
         --tty \
         --tmpfs /run:exec \
