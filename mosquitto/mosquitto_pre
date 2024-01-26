@@ -20,6 +20,8 @@ cat > ${fs}/config/mosquitto.conf <<- EOF
 persistence true
 persistence_location /mosquitto/data/
 log_dest stdout
+
+allow_anonymous true
 EOF
 
 echo "Initial mosquitto.conf file created."
