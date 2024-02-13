@@ -56,6 +56,8 @@ fi
 
 cd /work/$pkgname
 
+#replace - with ~ for debian compliance
+pkgversion="${pkgversion//-/~}"
 sed -i "s/VERSION = 1.2.3/VERSION = $pkgversion/g" debian/rules
 sed -i "s/1.2.3/$pkgversion/g" debian/changelog
 sed -i "s/VERSION?=.*$/VERSION?=$pkgversion/g" Makefile
