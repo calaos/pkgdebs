@@ -30,7 +30,7 @@ podman run \
         --name=hue2mqtt \
         --cidfile="${cidfile}" --replace --rm --tz=local \
         --sdnotify=conmon -d \
-        -v /mnt/calaos/hue2mqtt:/app/data \
+        -v /mnt/calaos/hue2mqtt/hue2mqtt.toml:/hue2mqtt.toml \
         --network=host \
         --pull=never \
         --replace \
