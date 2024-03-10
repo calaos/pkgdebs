@@ -1,0 +1,24 @@
+[Unit]
+Description=Hue2mqtt container
+After=local-fs.target calaos-boot.service
+Requires=network.target calaos-boot.service
+After=network.target
+RequiresMountsFor=/mnt/calaos
+
+[Service]
+Restart=always
+ExecStartPre=/usr/sbin/init_calaosfs
+ExecStartPre=/usr/sbin/hue2mqtt_pre
+KillMode=mixed
+ExecStop=/usr/bin/podman rm -f -i --cidfile=%t/%N.cid
+ExecStopPost=-/usr/bin/podman rm -f -i --cidfile=%t/%N.cid
+ExecStopPost=-/bin/rm -f %t/%N.cid
+Delegate=yes
+Type=notify
+NotifyAccess=all
+SyslogIdentifier=%N
+ExecStart=/usr/sbin/start_hue2mqtt %t/%N.cid
+EnvironmentFile=/usr/share/calaos/calaos-hue2mqtt.source
+
+[Install]
+WantedBy=multi-user.target

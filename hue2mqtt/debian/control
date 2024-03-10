@@ -1,0 +1,13 @@
+Source: calaos-hue2mqtt
+Section: admin
+Priority: optional
+Maintainer: Calaos Team <team@calaos.fr>
+Build-Depends: debhelper (>= 11), pkgconf
+Standards-Version: 4.6.2
+Homepage: https://calaos.fr
+
+Package: calaos-hue2mqtt
+Architecture: all
+Description: Calaos hue2mqtt container service
+ This package is the containerized version that calaos-os needs to run
+Depends: podman, calaos-container

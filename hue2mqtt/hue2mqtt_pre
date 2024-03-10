@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+
+# Init script for hue2mqtt for calaos-OS
+# This script will initialize with a default config
+
+fs="/mnt/calaos/hue2mqtt"
+
+mkdir -p ${fs}
+
+if [ ! -e "${fs}/hue2mqtt.toml" ]
+then
+    cp /usr/share/calaos/conf-template/hue2mqtt.toml ${fs}/hue2mqtt.toml
+    echo "Initial hue2mqtt config file created."
+fi
