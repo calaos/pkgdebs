@@ -18,13 +18,13 @@ Type=notify
 NotifyAccess=all
 SyslogIdentifier=%N
 EnvironmentFile=/usr/share/calaos/calaos-envoy.source
-PassEnvironment=ENVOY_CACHE_PATH
 
 ExecStart=/usr/bin/podman run \
         --name=envoy \
         --cidfile=%t/%N.cid --replace --rm --cgroups=split \
         --sdnotify=conmon -d \
         -v /mnt/calaos/envoy:/config \
+        -e ENVOY_CACHE_PATH=${ENVOY_CACHE_PATH} \
         --network=host \
         --pull=never \
         --replace \
