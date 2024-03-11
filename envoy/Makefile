@@ -39,3 +39,4 @@ deb:
 install:
 	install -Dm755 envoy_pre $(DESTDIR)$(PREFIX)/sbin/envoy_pre
 	install -Dm644 container.source $(DESTDIR)$(PREFIX)/usr/share/calaos/$(PKGNAME).source
+	install -Dm644 envoy.toml $(DESTDIR)$(PREFIX)/usr/share/calaos/conf-template/envoy.toml
