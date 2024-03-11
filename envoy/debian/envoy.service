@@ -1,5 +1,5 @@
 [Unit]
-Description=Hue2mqtt container
+Description=Enphase Envoy container
 After=local-fs.target calaos-boot.service
 Requires=network.target calaos-boot.service
 After=network.target
@@ -8,7 +8,7 @@ RequiresMountsFor=/mnt/calaos
 [Service]
 Restart=always
 ExecStartPre=/usr/sbin/init_calaosfs
-ExecStartPre=/usr/sbin/hue2mqtt_pre
+ExecStartPre=/usr/sbin/envoy_pre
 KillMode=mixed
 ExecStop=/usr/bin/podman rm -f -i --cidfile=%t/%N.cid
 ExecStopPost=-/usr/bin/podman rm -f -i --cidfile=%t/%N.cid
@@ -17,13 +17,14 @@ Delegate=yes
 Type=notify
 NotifyAccess=all
 SyslogIdentifier=%N
-EnvironmentFile=/usr/share/calaos/calaos-hue2mqtt.source
+EnvironmentFile=/usr/share/calaos/calaos-envoy.source
+PassEnvironment=ENVOY_CACHE_PATH
 
 ExecStart=/usr/bin/podman run \
-        --name=hue2mqtt \
+        --name=envoy \
         --cidfile=%t/%N.cid --replace --rm --cgroups=split \
         --sdnotify=conmon -d \
-        -v /mnt/calaos/hue2mqtt:/config \
+        -v /mnt/calaos/envoy:/config \
         --network=host \
         --pull=never \
         --replace \

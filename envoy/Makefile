@@ -1,6 +1,6 @@
 VERSION?=1.0.0
-PKGNAME?=calaos-hue2mqtt
-IMAGE_SRC?=ghcr.io/calaos/hue2mqtt:$(VERSION)
+PKGNAME?=calaos-envoy
+IMAGE_SRC?=ghcr.io/raoulh/envoy:$(VERSION)
 
 TOP_DIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 
@@ -12,7 +12,8 @@ build:
 	@echo "Building package $(VERSION)"
 	@echo "Using image: $(IMAGE_SRC)"
 	@echo "IMAGE_SRC=$(IMAGE_SRC)" > $(TOP_DIR)/container.source
-	@echo "SERVICE_NAME=hue2mqtt.service" >> $(TOP_DIR)/container.source
+	@echo "SERVICE_NAME=envoy.service" >> $(TOP_DIR)/container.source
+	@echo "ENVOY_CACHE_PATH=/config/cache" >> $(TOP_DIR)/container.source
 
 clean:
 	@rm -rf $(TOP_DIR)/pkg $(TOP_DIR)/build \
@@ -36,6 +37,5 @@ deb:
 	@dpkg-buildpackage -us -uc -b
 
 install:
-	install -Dm755 hue2mqtt_pre $(DESTDIR)$(PREFIX)/sbin/hue2mqtt_pre
+	install -Dm755 envoy_pre $(DESTDIR)$(PREFIX)/sbin/envoy_pre
 	install -Dm644 container.source $(DESTDIR)$(PREFIX)/usr/share/calaos/$(PKGNAME).source
-	install -Dm644 hue2mqtt.toml $(DESTDIR)$(PREFIX)/usr/share/calaos/conf-template/hue2mqtt.toml

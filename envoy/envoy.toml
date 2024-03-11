@@ -1,0 +1,14 @@
+[general]
+#Port to listen for Web
+port = 8100
+address = "0.0.0.0"
+
+#path to static html files
+static = "/app/share/envoy"
+
+[log]
+# default is used for all unspecified module level
+# can be any of: trace, debug, info, warning, error, fatal, panic
+default = "info"
+app = "info"
+envoy = "info"

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+
+# Init script for Zigbee2mqtt for calaos-OS
+# This script will initialize with a default config
+
+fs="/mnt/calaos/envoy"
+
+mkdir -p ${fs}
+
+if [ ! -e "${fs}/envoy.toml" ]
+then
+    cp /usr/share/calaos/conf-template/envoy.toml ${fs}/envoy.toml
+    echo "Initial envoy config file created."
+fi
