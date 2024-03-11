@@ -17,6 +17,7 @@ on:
           - mosquitto
           - haproxy
           - zigbee2mqtt
+          - envoy
       version:
         description: 'Package version'
         required: true
