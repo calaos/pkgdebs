@@ -21,4 +21,4 @@ Depends: calaos-container,
          calaos-grafana,
          calaos-hue2mqtt,
          calaos-envoy,
-         ola,
+         ola, chrony

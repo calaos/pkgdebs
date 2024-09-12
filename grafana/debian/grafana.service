@@ -27,6 +27,7 @@ ExecStart=/usr/bin/podman run \
         --pull=never \
         --replace \
         --tz=local \
+	--user=0 \
         ${IMAGE_SRC}
 
 [Install]
