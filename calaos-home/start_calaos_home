@@ -20,6 +20,11 @@ devicelist_input()
     find /dev/input/* -maxdepth 0 -type c 2>/dev/null ||:
 }
 
+devicelist_tty()
+{
+    find /dev/tty* -maxdepth 0 -type c 2>/dev/null ||:
+}
+
 append_gpu_opts()
 {
     local gpudevice=''
@@ -36,6 +41,15 @@ append_input_opts()
     while read -r inputdevice ; do
         echo " --device=$inputdevice "
     done < <(devicelist_input)
+}
+
+append_tty_opts()
+{
+    local ttydevice=''
+
+    while read -r ttydevice ; do
+        echo " --device=$ttydevice "
+    done < <(devicelist_tty)
 }
 
 vgadev=$(lspci | grep -i "VGA compatible controller")
@@ -60,24 +74,26 @@ fi
 # shellcheck disable=SC2046
 
 podman run \
-        --name=calaos-home \
-        --cidfile="${cidfile}" --replace --rm --tz=local \
-        --sdnotify=conmon -d \
-        -v /mnt/calaos/cache:/root/.cache/calaos/ \
-        -v /mnt/calaos/config:/etc/calaos \
-	-v /mnt/calaos/xorg.conf.d:/etc/X11/xorg.conf.d \
-        -v /run/calaos:/run/calaos \
-        --tty \
-        --tmpfs /run:exec \
-        --tmpfs /run/lock \
-        --tmpfs /tmp \
-        --network=host \
-        --pull=never \
-        --replace \
-        --tz=local \
-        --mount type=bind,source=/run/dbus,target=/run/dbus \
-        --mount type=bind,source=/run/udev/data,target=/run/udev/data,readonly \
-        $(append_gpu_opts) \
-        $(append_input_opts) \
-        "${IMAGE_SRC}" \
-        /usr/bin/start.sh "$gpudriver"
+    --name=calaos-home \
+    --cidfile="${cidfile}" --replace --rm --tz=local \
+    --sdnotify=conmon -d \
+    -v /mnt/calaos/cache:/root/.cache/calaos/ \
+    -v /mnt/calaos/config:/etc/calaos \
+    -v /mnt/calaos/xorg.conf.d:/etc/X11/xorg.conf.d \
+    -v /run/calaos:/run/calaos \
+    --tty \
+    --tmpfs /run:exec \
+    --tmpfs /run/lock \
+    --tmpfs /tmp \
+    --network=host \
+    --pull=never \
+    --replace \
+    --tz=local \
+    --privileged \
+    --mount type=bind,source=/run/dbus,target=/run/dbus \
+    --mount type=bind,source=/run/udev/data,target=/run/udev/data,readonly \
+    $(append_gpu_opts) \
+    $(append_input_opts) \
+    $(append_tty_opts) \
+    "${IMAGE_SRC}" \
+    /usr/bin/start.sh "$gpudriver"
