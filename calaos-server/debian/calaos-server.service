@@ -24,6 +24,7 @@ ExecStart=/usr/bin/podman run \
         --sdnotify=conmon -d \
         -v /mnt/calaos/cache:/root/.cache/calaos/ \
         -v /mnt/calaos/config:/root/.config/calaos \
+        -v /usr/share/calaos/remote-ui/firmwares:/opt/share/calaos/firmwares:ro \
         -v /run/calaos:/run/calaos \
         --privileged -v /dev/bus/usb:/dev/bus/usb \
         --network=host \
