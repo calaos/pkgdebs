@@ -1,0 +1,4 @@
+deb [signed-by=/usr/share/keyrings/calaos-archive-keyring.gpg] https://deb.calaos.fr/calaos/calaos-container bookworm releases
+deb [signed-by=/usr/share/keyrings/calaos-archive-keyring.gpg] https://deb.calaos.fr/calaos/calaos_ddns bookworm releases
+deb [signed-by=/usr/share/keyrings/calaos-archive-keyring.gpg] https://deb.calaos.fr/calaos/pkgdebs bookworm releases
+deb [signed-by=/usr/share/keyrings/calaos-archive-keyring.gpg] https://deb.calaos.fr/calaos/calaos_remote_ui bookworm releases

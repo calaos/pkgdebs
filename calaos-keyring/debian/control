@@ -1,0 +1,13 @@
+Source: calaos-keyring
+Section: admin
+Priority: optional
+Maintainer: Calaos Team <team@calaos.fr>
+Build-Depends: debhelper (>= 11), gnupg, curl
+Standards-Version: 4.6.2
+Homepage: https://calaos.fr
+
+Package: calaos-keyring
+Architecture: all
+Description: Calaos archive keyring and APT repository configuration
+ This package configures the Calaos APT repositories and installs
+ the archive signing key.

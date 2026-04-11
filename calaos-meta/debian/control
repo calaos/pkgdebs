@@ -10,7 +10,8 @@ Package: calaos
 Architecture: all
 Description: Meta package for Calaos-OS
  This package is the Calaos meta package that pulls all calaos dependencies
-Depends: calaos-container,
+Depends: calaos-keyring,
+         calaos-container,
          calaos-server,
          calaos-home,
          calaos-ddns,

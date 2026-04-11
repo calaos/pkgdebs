@@ -9,6 +9,7 @@ on:
         type: choice
         default: 'calaos-meta'
         options:
+          - calaos-keyring
           - calaos-meta
           - calaos-server
           - calaos-home
@@ -17,6 +18,7 @@ on:
           - mosquitto
           - haproxy
           - zigbee2mqtt
+          - hue2mqtt
           - envoy
       version:
         description: 'Package version'
