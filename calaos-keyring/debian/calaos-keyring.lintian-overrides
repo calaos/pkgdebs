@@ -1,0 +1,2 @@
+# Intentional: this package exists to ship APT sources and the signing key
+calaos-keyring: package-installs-apt-sources
