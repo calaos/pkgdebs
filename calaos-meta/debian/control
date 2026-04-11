@@ -21,4 +21,5 @@ Depends: calaos-container,
          calaos-grafana,
          calaos-hue2mqtt,
          calaos-envoy,
+         calaos-remote-ui-waveshare-86-panel,
          ola, chrony
