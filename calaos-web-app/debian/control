@@ -1,0 +1,14 @@
+Source: calaos-web-app
+Section: admin
+Priority: optional
+Maintainer: Calaos Team <team@calaos.fr>
+Build-Depends: debhelper (>= 11), curl, ca-certificates
+Standards-Version: 4.6.2
+Homepage: https://calaos.fr
+
+Package: calaos-web-app
+Architecture: all
+Description: Calaos web application
+ The Calaos web application is the web user interface of the Calaos
+ project. This package ships the prebuilt static files, which are
+ served by calaos-server.
