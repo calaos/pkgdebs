@@ -25,6 +25,7 @@ ExecStart=/usr/bin/podman run \
         -v /mnt/calaos/cache:/root/.cache/calaos/ \
         -v /mnt/calaos/config:/root/.config/calaos \
         -v /usr/share/calaos/remote-ui/firmwares:/opt/share/calaos/firmwares:ro \
+        -v /usr/share/calaos/webapp:/opt/share/calaos/app:ro \
         -v /run/calaos:/run/calaos \
         --privileged -v /dev/bus/usb:/dev/bus/usb \
         --network=host \
