@@ -12,6 +12,7 @@ on:
           - calaos-keyring
           - calaos-meta
           - calaos-server
+          - calaos-web-app
           - calaos-home
           - grafana
           - influxdb

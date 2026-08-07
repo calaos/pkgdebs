@@ -10,4 +10,4 @@ Package: calaos-server
 Architecture: all
 Description: Calaos Server service
  Calaos Server is the main service of Calaos project.
-Depends: podman, calaos-container
+Depends: podman, calaos-container, calaos-web-app
