@@ -18,22 +18,7 @@ NotifyAccess=all
 SyslogIdentifier=%N
 EnvironmentFile=/usr/share/calaos/calaos-server.source
 
-ExecStart=/usr/bin/podman run \
-        --name=calaos-server \
-        --cidfile=%t/%N.cid --replace --rm --cgroups=split --tz=local \
-        --sdnotify=conmon -d \
-        -v /mnt/calaos/cache:/root/.cache/calaos/ \
-        -v /mnt/calaos/config:/root/.config/calaos \
-        -v /usr/share/calaos/remote-ui/firmwares:/opt/share/calaos/firmwares:ro \
-        -v /usr/share/calaos/webapp:/opt/share/calaos/app:ro \
-        -v /run/calaos:/run/calaos \
-        --privileged -v /dev/bus/usb:/dev/bus/usb \
-        --network=host \
-        --pull=never \
-        --replace \
-        --tz=local \
-        ${IMAGE_SRC} \
-        /opt/bin/calaos_server
+ExecStart=/usr/sbin/start_calaos_server %t/%N.cid
 
 [Install]
 WantedBy=multi-user.target

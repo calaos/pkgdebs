@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -e
+
+cidfile=$1
+[ -z "$cidfile" ] && {
+    echo "Missing arg"
+    exit 1
+}
+
+# /dev/bus/usb only exists once a USB controller is present; podman fails
+# with "statfs" on a missing bind source, so the mount must be conditional.
+usb_opts=()
+[ -d /dev/bus/usb ] && usb_opts=(-v /dev/bus/usb:/dev/bus/usb)
+
+exec podman run \
+        --name=calaos-server \
+        --cidfile="${cidfile}" --replace --rm --cgroups=split --tz=local \
+        --sdnotify=conmon -d \
+        -v /mnt/calaos/cache:/root/.cache/calaos/ \
+        -v /mnt/calaos/config:/root/.config/calaos \
+        -v /usr/share/calaos/remote-ui/firmwares:/opt/share/calaos/firmwares:ro \
+        -v /usr/share/calaos/webapp:/opt/share/calaos/app:ro \
+        -v /run/calaos:/run/calaos \
+        --privileged "${usb_opts[@]}" \
+        --network=host \
+        --pull=never \
+        --replace \
+        --tz=local \
+        "${IMAGE_SRC}" \
+        /opt/bin/calaos_server

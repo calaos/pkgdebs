@@ -36,4 +36,5 @@ deb:
 	@dpkg-buildpackage -us -uc -b
 
 install:
+	install -Dm755 start_calaos_server $(DESTDIR)$(PREFIX)/sbin/start_calaos_server
 	install -Dm644 container.source $(DESTDIR)$(PREFIX)/usr/share/calaos/$(PKGNAME).source
