@@ -1,6 +1,6 @@
 VERSION?=1.0.0
 PKGNAME?=calaos-grafana
-IMAGE_SRC?=docker.io/grafana/grafana-oss:$(VERSION)
+IMAGE_SRC?=docker.io/grafana/grafana:$(VERSION)
 
 TOP_DIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 

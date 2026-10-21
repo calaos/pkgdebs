@@ -20,6 +20,13 @@ set -e
 
 case "$1" in
     configure)
+        # Grafana SQL migrations are forward-only: keep the pre-11.6 db so a
+        # downgrade does not have to start from a migrated schema.
+        db=/mnt/calaos/grafana/data/grafana.db
+        if [ -n "$2" ] && [ -f "$db" ] && dpkg --compare-versions "$2" lt 11.6; then
+            cp -p "$db" "$db.bak-$2" || true
+        fi
+
         pull_calaos_image "$DPKG_MAINTSCRIPT_PACKAGE"
     ;;
 

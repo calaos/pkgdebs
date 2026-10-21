@@ -1,6 +1,6 @@
 VERSION?=1.0.0
 PKGNAME?=calaos-influxdb
-IMAGE_SRC?=docker.io/influxdb:$(VERSION)
+IMAGE_SRC?=docker.io/library/influxdb:$(VERSION)-alpine
 
 TOP_DIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 

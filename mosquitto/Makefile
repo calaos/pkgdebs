@@ -1,6 +1,6 @@
 VERSION?=1.0.0
 PKGNAME?=calaos-mosquitto
-IMAGE_SRC?=docker.io/eclipse-mosquitto:$(VERSION)
+IMAGE_SRC?=docker.io/library/eclipse-mosquitto:$(VERSION)
 
 TOP_DIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 

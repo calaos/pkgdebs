@@ -1,6 +1,6 @@
 VERSION?=1.0.0
 PKGNAME?=calaos-haproxy
-IMAGE_SRC?=docker.io/haproxy:$(VERSION)
+IMAGE_SRC?=docker.io/library/haproxy:$(VERSION)-alpine
 
 TOP_DIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 
