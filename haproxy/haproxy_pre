@@ -58,6 +58,7 @@ frontend calaos-https
     default_backend calaos-backend
 
 backend calaos-backend
+    http-request set-header X-Forwarded-Proto %[ssl_fc,iif(https,http)]
     #redirect in https if user tries http
     redirect scheme https if !{ ssl_fc }
     server calaos-server 127.0.0.1:5454 check
