@@ -13,6 +13,11 @@ cidfile=$1
 usb_opts=()
 [ -d /dev/bus/usb ] && usb_opts=(-v /dev/bus/usb:/dev/bus/usb)
 
+# Only console/ is shared: /run/calaos-container also holds the admin sessions.
+# Created here because calaos-server can start before the daemon, which never
+# replaces the dir.
+install -d -m 0700 -o root -g root /run/calaos-container /run/calaos-container/console
+
 exec podman run \
         --name=calaos-server \
         --cidfile="${cidfile}" --replace --rm --cgroups=split --tz=local \
@@ -22,6 +27,7 @@ exec podman run \
         -v /usr/share/calaos/remote-ui/firmwares:/opt/share/calaos/firmwares:ro \
         -v /usr/share/calaos/webapp:/opt/share/calaos/app:ro \
         -v /run/calaos:/run/calaos \
+        -v /run/calaos-container/console:/run/calaos-container/console \
         --privileged "${usb_opts[@]}" \
         --network=host \
         --pull=never \
