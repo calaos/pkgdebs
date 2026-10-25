@@ -18,6 +18,7 @@ usb_opts=()
 # replaces the dir.
 install -d -m 0700 -o root -g root /run/calaos-container /run/calaos-container/console
 
+# /etc/localtime is left to --tz=local (a second mount would clash); only /etc/timezone is added.
 exec podman run \
         --name=calaos-server \
         --cidfile="${cidfile}" --replace --rm --cgroups=split --tz=local \
@@ -27,6 +28,7 @@ exec podman run \
         -v /usr/share/calaos/remote-ui/firmwares:/opt/share/calaos/firmwares:ro \
         -v /usr/share/calaos/webapp:/opt/share/calaos/app:ro \
         -v /run/calaos:/run/calaos \
+        -v /etc/timezone:/etc/timezone:ro \
         -v /run/calaos-container/console:/run/calaos-container/console \
         --privileged "${usb_opts[@]}" \
         --network=host \

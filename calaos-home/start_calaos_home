@@ -81,6 +81,7 @@ podman run \
     -v /mnt/calaos/config:/etc/calaos \
     -v /mnt/calaos/xorg.conf.d:/etc/X11/xorg.conf.d \
     -v /run/calaos:/run/calaos \
+    -v /etc/timezone:/etc/timezone:ro \
     --tty \
     --tmpfs /run:exec \
     --tmpfs /run/lock \
