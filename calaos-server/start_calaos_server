@@ -22,6 +22,8 @@ exec podman run \
         --name=calaos-server \
         --cidfile="${cidfile}" --replace --rm --cgroups=split --tz=local \
         --sdnotify=conmon -d \
+        --log-driver=passthrough \
+        -e CALAOS_JOURNAL_PRIORITY=1 \
         -v /mnt/calaos/cache:/root/.cache/calaos/ \
         -v /mnt/calaos/config:/root/.config/calaos \
         -v /usr/share/calaos/remote-ui/firmwares:/opt/share/calaos/firmwares:ro \
