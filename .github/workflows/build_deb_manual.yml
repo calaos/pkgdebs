@@ -7,10 +7,10 @@ on:
         description: 'Package name'
         required: true
         type: choice
-        default: 'calaos-meta'
+        default: 'calaos-server'
+        # No calaos-meta: only release_calaos_os.yml publishes it, with its pins.
         options:
           - calaos-keyring
-          - calaos-meta
           - calaos-server
           - calaos-web-app
           - calaos-home
@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: make-deb-${{ github.event.inputs.pkgname }}
         run: make build-${{ github.event.inputs.pkgname }} PKGVERSION=${{ github.event.inputs.version }} IMAGE_SRC=${{ github.event.inputs.image_src }}

@@ -105,7 +105,7 @@ package (`calaos-meta`). It is calendar based:
 | Channel | Format | Example |
 |---|---|---|
 | stable | `YYYY.MM`, or `YYYY.MM.N` (N >= 1) for another release in the same month | `2026.11`, `2026.11.1` |
-| dev | `YYYY.MM~dev.N` (the git tag uses `-dev.N`) | `2026.12~dev.0` |
+| dev | `YYYY.MM~dev.M`, or `YYYY.MM.N~dev.M` before `YYYY.MM.N` (the git tag uses `-dev.M`) | `2026.12~dev.0`, `2026.11.1~dev.0` |
 
 Bump it only when a set of component releases is published, by running the
 **Release Calaos OS** workflow (`.github/workflows/release_calaos_os.yml`,
@@ -117,7 +117,9 @@ Actions tab, from `main`) with the `version` and the `channel`. It:
 2. reads the apt indexes of every repository in `calaos-keyring/calaos.list`
    (component `releases` for stable, `releases` and `pre-releases` for dev,
    so that a stable release newer than every pre-release still wins), and
-   takes the highest version of each package;
+   takes the highest version of each package; when the arches disagree, it
+   keeps the lowest of the per-arch highest versions, so the pin can be met
+   on every arch that publishes the package;
 3. pins every `calaos-*` entry of `calaos-meta/debian/control` to
    `(>= <that version>)`, and writes a changelog entry listing those
    versions, which is also the release note; `ola` and `chrony` stay
@@ -131,6 +133,12 @@ use it to check the generated `Depends` first. A dev release should be
 started once the component prereleases it needs are in the apt repository;
 a stable one once their stable releases are.
 
+If the GitHub release is created but the apt refresh step fails, any rerun
+with the same version stops on the existing tag, "Re-run failed jobs"
+included (it reruns the whole job). The release is already in place: trigger
+the apt repository webhook by hand, or release the next version (`.N+1`, or
+`~dev.M+1`).
+
 The same steps run locally, without network, from fetched indexes:
 
 ```
@@ -140,8 +148,11 @@ make test        # offline tests of calaos_os_release, in the builder image
 ```
 
 `prepare` rewrites `calaos-meta/debian/{control,changelog}` in place: do not
-commit the result. Do not build `calaos-meta` with the generic workflows,
-which publish it without pins.
+commit the result. `prepare` only reads the index files of the channel
+(`<repo>.<component>.<arch>`), so an `apt-index` directory reused from a dev
+fetch does not leak pre-releases into a stable release. The generic workflows
+do not publish `calaos-meta`, which would go out without pins:
+`build_deb_manual.yml` does not offer it and `build_deb.yml` refuses it.
 
 ## Adding or bumping a package
 
