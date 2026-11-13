@@ -120,7 +120,15 @@ the `calaos` versions already in the apt indexes (step 2):
   after the stable `2026.11`, `2026.11.1~dev.1`).
 
 A `version` typed in wins over the computation. The version, the channel and
-`dry_run` are shown at the top of the run summary and in the logs. Either
+`dry_run` are shown at the top of the run summary and in the logs; when
+`prepare` refuses the version, the summary shows its error message instead.
+
+The apt indexes lag the publish webhook. Right after a release, wait for the
+index to be updated before starting the next run: a run that does not see the
+release yet computes the same version again (the existing
+`calaos-meta-<version>` tag then stops it, so nothing is published twice), and
+a dev run that does not see the new stable yet can compute a `~dev.M` below
+that stable, which no dev box would install. Either
 way the workflow then:
 
 1. refuses a version that does not match the channel format, or that is not

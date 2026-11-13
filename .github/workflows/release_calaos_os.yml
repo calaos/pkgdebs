@@ -56,19 +56,36 @@ jobs:
 
       - name: Write Depends and changelog
         id: prep
-        run: ./calaos_os_release prepare "$CHANNEL" "$VERSION" apt-index calaos-meta release-notes.md >>"$GITHUB_OUTPUT"
+        run: |
+          rc=0
+          ./calaos_os_release prepare "$CHANNEL" "$VERSION" apt-index calaos-meta release-notes.md >>"$GITHUB_OUTPUT" 2>prepare.err || rc=$?
+          cat prepare.err >&2
+          exit "$rc"
 
       - name: Show the version
+        if: ${{ !cancelled() && steps.prep.conclusion != 'skipped' }}
         env:
           PREP_VERSION: ${{ steps.prep.outputs.version }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
-          echo "Calaos OS $PREP_VERSION ($CHANNEL, dry_run=$DRY_RUN)"
-          {
-            echo "## Calaos OS $PREP_VERSION"
-            echo
-            echo "Channel: $CHANNEL, dry run: $DRY_RUN"
-          } >>"$GITHUB_STEP_SUMMARY"
+          if [[ -n $PREP_VERSION ]]; then
+            echo "Calaos OS $PREP_VERSION ($CHANNEL, dry_run=$DRY_RUN)"
+            {
+              echo "## Calaos OS $PREP_VERSION"
+              echo
+              echo "Channel: $CHANNEL, dry run: $DRY_RUN"
+            } >>"$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "## Calaos OS release refused"
+              echo
+              echo "Channel: $CHANNEL, dry run: $DRY_RUN"
+              echo
+              echo '```'
+              cat prepare.err
+              echo '```'
+            } >>"$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Show the generated packaging
         run: cat calaos-meta/debian/control calaos-meta/debian/changelog

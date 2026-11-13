@@ -425,6 +425,25 @@ stanza calaos 2026.11 >>"$TMP/case/index/pkgdebs.releases.all"
 stanza calaos 2026.11~dev.3 >>"$TMP/case/index/pkgdebs.pre-releases.all"
 run "auto dev, after the stable of the month" ok prepare dev "" "$TMP/case/index" "$TMP/case/meta" &&
     [[ $OUT == "version=2026.11.1~dev.1"$'\n'"tag_version=2026.11.1-dev.1" ]] || fail "auto dev after stable: output '$OUT'"
+fresh
+stanza calaos 2026.11 >>"$TMP/case/index/pkgdebs.releases.all"
+stanza calaos 2026.11~dev.3 >>"$TMP/case/index/pkgdebs.pre-releases.all"
+stanza calaos 2026.11.1~dev.1 >>"$TMP/case/index/pkgdebs.pre-releases.all"
+run "auto dev, second dev after the stable" ok prepare dev "" "$TMP/case/index" "$TMP/case/meta" &&
+    [[ $OUT == "version=2026.11.1~dev.2"$'\n'"tag_version=2026.11.1-dev.2" ]] || fail "auto dev second after stable: output '$OUT'"
+fresh
+stanza calaos 2026.11 >>"$TMP/case/index/pkgdebs.releases.all"
+stanza calaos 2026.11.1 >>"$TMP/case/index/pkgdebs.releases.all"
+stanza calaos 2026.11.2~dev.4 >>"$TMP/case/index/pkgdebs.pre-releases.all"
+run "auto dev, dev above two stables" ok prepare dev "" "$TMP/case/index" "$TMP/case/meta" &&
+    [[ $OUT == "version=2026.11.2~dev.5"$'\n'"tag_version=2026.11.2-dev.5" ]] || fail "auto dev above stables: output '$OUT'"
+fresh
+stanza calaos 2026.11 >>"$TMP/case/index/pkgdebs.releases.all"
+stanza calaos 2026.11.1~dev.1 >>"$TMP/case/index/pkgdebs.pre-releases.all"
+stanza calaos 2026.11.1~dev.2 >>"$TMP/case/index/pkgdebs.pre-releases.all"
+stanza calaos 2026.11.1 >>"$TMP/case/index/pkgdebs.releases.all"
+run "auto dev, stable newer than its devs" ok prepare dev "" "$TMP/case/index" "$TMP/case/meta" &&
+    [[ $OUT == "version=2026.11.2~dev.1"$'\n'"tag_version=2026.11.2-dev.1" ]] || fail "auto dev after newer stable: output '$OUT'"
 # A stable run does not read pre-releases, a dev run reads the stables.
 fresh
 stanza calaos 2026.11~dev.3 >>"$TMP/case/index/pkgdebs.pre-releases.all"

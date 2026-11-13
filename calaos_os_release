@@ -156,6 +156,9 @@ load_latest()
     ((${#files[@]})) || die "no apt index of the $channel channel in $dir"
     while read -r arch pkg ver; do
         key="$pkg $arch"
+        # Every version, not the per-arch max: a dev above the month's stable
+        # would otherwise hide that stable from next_version.
+        [[ $pkg == calaos ]] && CALAOS_VERSIONS+=("$ver")
         if [[ -z ${per_arch[$key]:-} ]] || dpkg --compare-versions "$ver" gt "${per_arch[$key]}"; then
             per_arch[$key]=$ver
         fi
@@ -170,7 +173,6 @@ load_latest()
     for key in "${!per_arch[@]}"; do
         pkg=${key% *}
         ver=${per_arch[$key]}
-        [[ $pkg == calaos ]] && CALAOS_VERSIONS+=("$ver")
         if [[ -z ${LATEST[$pkg]:-} ]] || dpkg --compare-versions "$ver" lt "${LATEST[$pkg]}"; then
             LATEST[$pkg]=$ver
         fi
