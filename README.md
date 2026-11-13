@@ -109,7 +109,19 @@ package (`calaos-meta`). It is calendar based:
 
 Bump it only when a set of component releases is published, by running the
 **Release Calaos OS** workflow (`.github/workflows/release_calaos_os.yml`,
-Actions tab, from `main`) with the `version` and the `channel`. It:
+Actions tab, from `main`) with the `channel` and, optionally, the `version`.
+Left empty, the version is computed from the UTC month of the run and from
+the `calaos` versions already in the apt indexes (step 2):
+
+- stable: `YYYY.MM`, or the next `.N` (`2026.11.1`, `2026.11.2`...) once a
+  stable of the month exists;
+- dev: the stable that would be computed, then `~dev.M` with M one above the
+  highest pre-release of that base, from 1 (`2026.11~dev.1`, `2026.11~dev.2`;
+  after the stable `2026.11`, `2026.11.1~dev.1`).
+
+A `version` typed in wins over the computation. The version, the channel and
+`dry_run` are shown at the top of the run summary and in the logs. Either
+way the workflow then:
 
 1. refuses a version that does not match the channel format, or that is not
    strictly greater (`dpkg --compare-versions`) than the latest `calaos`
@@ -144,6 +156,8 @@ The same steps run locally, without network, from fetched indexes:
 ```
 ./calaos_os_release fetch dev calaos-keyring/calaos.list apt-index
 ./calaos_os_release prepare dev 2026.12~dev.0 apt-index calaos-meta notes.md
+./calaos_os_release prepare dev "" apt-index calaos-meta notes.md   # computed
+./calaos_os_release next dev 2026.11 2026.11 2026.11.1~dev.2        # 2026.11.1~dev.3
 make test        # offline tests of calaos_os_release, in the builder image
 ```
 

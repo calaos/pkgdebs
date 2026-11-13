@@ -7,8 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Calaos OS version: YYYY.MM or YYYY.MM.N (stable), YYYY.MM~dev.M or YYYY.MM.N~dev.M (dev)'
-        required: true
+        description: 'Calaos OS version, empty to compute it: YYYY.MM or YYYY.MM.N (stable), YYYY.MM~dev.M or YYYY.MM.N~dev.M (dev)'
+        required: false
+        default: ''
         type: string
       channel:
         description: 'stable (apt component releases) or dev (pre-releases)'
@@ -56,6 +57,18 @@ jobs:
       - name: Write Depends and changelog
         id: prep
         run: ./calaos_os_release prepare "$CHANNEL" "$VERSION" apt-index calaos-meta release-notes.md >>"$GITHUB_OUTPUT"
+
+      - name: Show the version
+        env:
+          PREP_VERSION: ${{ steps.prep.outputs.version }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          echo "Calaos OS $PREP_VERSION ($CHANNEL, dry_run=$DRY_RUN)"
+          {
+            echo "## Calaos OS $PREP_VERSION"
+            echo
+            echo "Channel: $CHANNEL, dry run: $DRY_RUN"
+          } >>"$GITHUB_STEP_SUMMARY"
 
       - name: Show the generated packaging
         run: cat calaos-meta/debian/control calaos-meta/debian/changelog

@@ -129,7 +129,7 @@ fresh()
 
 # Format refused, per channel.
 for v in 2026.13 2026.00 2026.1 26.11 2026.11.0 2026.11.01 2026.11~dev.1 \
-    2026.11-dev.1 1.2.3 2026.11.1a "" "2026.11 "; do
+    2026.11-dev.1 1.2.3 2026.11.1a "2026.11 "; do
     fresh
     run "stable refuses '$v'" ko prepare stable "$v" "$TMP/case/index" "$TMP/case/meta" &&
         expect_contains "stable refuses '$v'" "$ERR" "not a stable Calaos OS version"
@@ -365,6 +365,86 @@ if run "real control" ok prepare stable 2026.11 "$TMP/real-index" "$TMP/real"; t
         fail "real control: not every calaos-* entry is pinned"
     grep -qF "calaos-web-app (>= 1.0)" "$TMP/real/debian/control" || fail "real control: calaos-web-app not pinned"
 fi
+
+# Computed version: next <channel> <month> <published versions...>.
+# Non calendar versions (the 1.1.4 of the old scheme) are ignored.
+for spec in \
+    "stable|2026.11|2026.11" \
+    "stable|2026.11|2026.11|1.1.4" \
+    "stable|2026.11|2026.11|2026.10 2026.10.3" \
+    "stable|2026.11|2026.11.1|2026.11" \
+    "stable|2026.11|2026.11.3|2026.11 2026.11.1 2026.11.2 2026.11~dev.4" \
+    "stable|2026.11|2026.11.2|2026.11.1 2026.11" \
+    "stable|2026.12|2026.12|2026.11.2" \
+    "stable|2027.01|2027.01|2026.12 2026.12.1" \
+    "stable|2026.11|2026.11|2026.11~dev.1 2026.11.1~dev.2" \
+    "dev|2026.11|2026.11~dev.1" \
+    "dev|2026.11|2026.11~dev.1|2026.10 1.1.4" \
+    "dev|2026.11|2026.11~dev.2|2026.11~dev.1" \
+    "dev|2026.11|2026.11~dev.11|2026.11~dev.10 2026.11~dev.9" \
+    "dev|2026.11|2026.11.1~dev.1|2026.11" \
+    "dev|2026.11|2026.11.2~dev.1|2026.11 2026.11.1 2026.11~dev.7" \
+    "dev|2026.11|2026.11.1~dev.4|2026.11 2026.11.1~dev.3 2026.11.1~dev.1" \
+    "dev|2026.12|2026.12~dev.1|2026.11.1 2026.11.2~dev.5" \
+    "dev|2027.01|2027.01~dev.3|2026.12 2027.01~dev.2 2027.01~dev.1"; do
+    IFS='|' read -r ch month want published <<<"$spec"
+    # shellcheck disable=SC2086
+    if run "next $ch $month [$published]" ok next "$ch" "$month" $published; then
+        [[ $OUT == "$want" ]] || fail "next $ch $month [$published]: got '$OUT', want '$want'"
+    fi
+done
+run "next refuses a bad month" ko next stable 2026.13
+run "next refuses a bad channel" ko next beta 2026.11
+
+# prepare with an empty version computes it from the index and the month.
+export CALAOS_OS_RELEASE_MONTH=2026.11
+fresh
+if run "auto stable, nothing of the month" ok prepare stable "" "$TMP/case/index" "$TMP/case/meta"; then
+    [[ $OUT == "version=2026.11"$'\n'"tag_version=2026.11" ]] || fail "auto stable: output '$OUT'"
+    expect_contains "auto stable" "$ERR" "computed version 2026.11"
+    head -1 "$TMP/case/meta/debian/changelog" | grep -qxF "calaos (2026.11) bookworm; urgency=medium" ||
+        fail "auto stable: changelog header"
+fi
+fresh
+stanza calaos 2026.11 >>"$TMP/case/index/pkgdebs.releases.all"
+run "auto stable, second of the month" ok prepare stable "" "$TMP/case/index" "$TMP/case/meta" &&
+    [[ $OUT == "version=2026.11.1"$'\n'"tag_version=2026.11.1" ]] || fail "auto stable .1: output '$OUT'"
+fresh
+stanza calaos 2026.10.2 >>"$TMP/case/index/pkgdebs.releases.all"
+run "auto stable, new month" ok prepare stable "" "$TMP/case/index" "$TMP/case/meta" &&
+    [[ $OUT == "version=2026.11"$'\n'"tag_version=2026.11" ]] || fail "auto stable new month: output '$OUT'"
+fresh
+run "auto dev, first" ok prepare dev "" "$TMP/case/index" "$TMP/case/meta" &&
+    [[ $OUT == "version=2026.11~dev.1"$'\n'"tag_version=2026.11-dev.1" ]] || fail "auto dev first: output '$OUT'"
+fresh
+stanza calaos 2026.11~dev.1 >>"$TMP/case/index/pkgdebs.pre-releases.all"
+run "auto dev, next dev" ok prepare dev "" "$TMP/case/index" "$TMP/case/meta" &&
+    [[ $OUT == "version=2026.11~dev.2"$'\n'"tag_version=2026.11-dev.2" ]] || fail "auto dev next: output '$OUT'"
+fresh
+stanza calaos 2026.11 >>"$TMP/case/index/pkgdebs.releases.all"
+stanza calaos 2026.11~dev.3 >>"$TMP/case/index/pkgdebs.pre-releases.all"
+run "auto dev, after the stable of the month" ok prepare dev "" "$TMP/case/index" "$TMP/case/meta" &&
+    [[ $OUT == "version=2026.11.1~dev.1"$'\n'"tag_version=2026.11.1-dev.1" ]] || fail "auto dev after stable: output '$OUT'"
+# A stable run does not read pre-releases, a dev run reads the stables.
+fresh
+stanza calaos 2026.11~dev.3 >>"$TMP/case/index/pkgdebs.pre-releases.all"
+run "auto stable ignores pre-releases" ok prepare stable "" "$TMP/case/index" "$TMP/case/meta" &&
+    [[ $OUT == "version=2026.11"$'\n'"tag_version=2026.11" ]] || fail "auto stable ignoring dev: output '$OUT'"
+# A published version from a later month than the clock still stops the release.
+fresh
+stanza calaos 2026.12 >>"$TMP/case/index/pkgdebs.releases.all"
+run "auto refuses when behind the index" ko prepare stable "" "$TMP/case/index" "$TMP/case/meta" &&
+    expect_contains "auto behind" "$ERR" "is not greater than the published calaos 2026.12"
+# A given version wins over the computation.
+fresh
+stanza calaos 2026.11 >>"$TMP/case/index/pkgdebs.releases.all"
+run "given version wins" ok prepare stable 2026.12 "$TMP/case/index" "$TMP/case/meta" &&
+    [[ $OUT == "version=2026.12"$'\n'"tag_version=2026.12" ]] || fail "given version: output '$OUT'"
+[[ $ERR != *"computed version"* ]] || fail "given version: computed anyway"
+fresh
+stanza calaos 2026.11 >>"$TMP/case/index/pkgdebs.releases.all"
+run "given version still checked" ko prepare stable 2026.11 "$TMP/case/index" "$TMP/case/meta"
+unset CALAOS_OS_RELEASE_MONTH
 
 echo "$count cases, $failures failures"
 ((failures == 0))
