@@ -59,7 +59,8 @@ cd /work/$pkgname
 #replace - with ~ for debian compliance
 pkgversion="${pkgversion/-/'~'}"
 sed -i "s/VERSION = 1.2.3/VERSION = $pkgversion/g" debian/rules
-sed -i "s/1.2.3/$pkgversion/g" debian/changelog
+# Line 1 only: a release changelog body may list versions that match 1.2.3.
+sed -i "1s/1\.2\.3/$pkgversion/" debian/changelog
 sed -i "s/VERSION?=.*$/VERSION?=$pkgversion/g" Makefile
 
 if [ -n "$image_src" ]

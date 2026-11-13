@@ -1,0 +1,96 @@
+name: Release Calaos OS
+
+# Started by hand when a set of component releases is published. The version
+# of the `calaos` meta package is the Calaos OS version shown on the boxes;
+# its Depends pin every calaos-* package to what the channel publishes now.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Calaos OS version: YYYY.MM or YYYY.MM.N (stable), YYYY.MM~dev.M or YYYY.MM.N~dev.M (dev)'
+        required: true
+        type: string
+      channel:
+        description: 'stable (apt component releases) or dev (pre-releases)'
+        required: true
+        type: choice
+        default: dev
+        options:
+          - dev
+          - stable
+      dry_run:
+        description: 'Build the deb as an artifact, publish nothing'
+        required: true
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-calaos-os
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      CHANNEL: ${{ inputs.channel }}
+      VERSION: ${{ inputs.version }}
+
+    steps:
+      - name: Refuse a branch other than main
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Release Calaos OS runs from main only, not $GITHUB_REF"
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - name: Test the release script
+        run: bash tests/calaos_os_release_test.sh
+
+      - name: Fetch the apt indexes of the channel
+        run: ./calaos_os_release fetch "$CHANNEL" calaos-keyring/calaos.list apt-index
+
+      - name: Write Depends and changelog
+        id: prep
+        run: ./calaos_os_release prepare "$CHANNEL" "$VERSION" apt-index calaos-meta release-notes.md >>"$GITHUB_OUTPUT"
+
+      - name: Show the generated packaging
+        run: cat calaos-meta/debian/control calaos-meta/debian/changelog
+
+      - name: Build the deb
+        env:
+          TAG_VERSION: ${{ steps.prep.outputs.tag_version }}
+        run: make build-calaos-meta PKGVERSION="$TAG_VERSION"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb
+          path: pkg/*.deb
+
+      # Same tag scheme as build_deb.yml; the apt repository files a
+      # prerelease under pre-releases and anything else under releases.
+      - name: Create the release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.CALAOS_REL_TOKEN }}
+          TAG_VERSION: ${{ steps.prep.outputs.tag_version }}
+        run: |
+          prerelease=()
+          if [ "$CHANNEL" = dev ]; then
+            prerelease=(--prerelease)
+          fi
+          gh release create "calaos-meta-$TAG_VERSION" pkg/*.deb \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "calaos-meta - $TAG_VERSION" \
+            --notes-file release-notes.md "${prerelease[@]}"
+
+      - name: Update repo cache
+        if: ${{ !inputs.dry_run }}
+        uses: distributhor/workflow-webhook@v3
+        env:
+          webhook_url: ${{ secrets.DEB_REPO_WEBHOOK_URL }}
+          webhook_secret: ${{ secrets.DEB_REPO_WEBHOOK_SECRET }}

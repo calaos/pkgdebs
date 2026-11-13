@@ -92,9 +92,67 @@ as a workflow artifact, create a GitHub Release tagged `<pkgname>-<version>`
 (with the `.deb` attached), then call a webhook (`DEB_REPO_WEBHOOK_URL`) to
 refresh the apt repository. Secrets used: `CALAOS_REL_TOKEN`,
 `DEB_REPO_WEBHOOK_URL`, `DEB_REPO_WEBHOOK_SECRET`. The apt repository itself
-(`https://deb.calaos.fr/calaos/pkgdebs`, suite `bookworm`, component
-`releases`, as configured in `calaos-keyring/calaos.list`) is managed outside
-this repository.
+(`https://deb.calaos.fr/calaos/pkgdebs`, suite `bookworm`, as configured in
+`calaos-keyring/calaos.list`) is managed outside this repository. It files a
+GitHub prerelease under the `pre-releases` component and any other release
+under `releases`; the keyring only lists `releases`.
+
+## Releasing Calaos OS
+
+The Calaos OS version shown on a box is the version of the `calaos` meta
+package (`calaos-meta`). It is calendar based:
+
+| Channel | Format | Example |
+|---|---|---|
+| stable | `YYYY.MM`, or `YYYY.MM.N` (N >= 1) for another release in the same month | `2026.11`, `2026.11.1` |
+| dev | `YYYY.MM~dev.M`, or `YYYY.MM.N~dev.M` before `YYYY.MM.N` (the git tag uses `-dev.M`) | `2026.12~dev.0`, `2026.11.1~dev.0` |
+
+Bump it only when a set of component releases is published, by running the
+**Release Calaos OS** workflow (`.github/workflows/release_calaos_os.yml`,
+Actions tab, from `main`) with the `version` and the `channel`. It:
+
+1. refuses a version that does not match the channel format, or that is not
+   strictly greater (`dpkg --compare-versions`) than the latest `calaos`
+   published in the channel;
+2. reads the apt indexes of every repository in `calaos-keyring/calaos.list`
+   (component `releases` for stable, `releases` and `pre-releases` for dev,
+   so that a stable release newer than every pre-release still wins), and
+   takes the highest version of each package; when the arches disagree, it
+   keeps the lowest of the per-arch highest versions, so the pin can be met
+   on every arch that publishes the package;
+3. pins every `calaos-*` entry of `calaos-meta/debian/control` to
+   `(>= <that version>)`, and writes a changelog entry listing those
+   versions, which is also the release note; `ola` and `chrony` stay
+   unversioned;
+4. builds the deb, creates the release `calaos-meta-<version>` (a
+   prerelease for dev) and refreshes the apt repository.
+
+A `calaos-*` package listed in `Depends` but absent from the channel stops
+the release. `dry_run` builds the deb as an artifact and publishes nothing:
+use it to check the generated `Depends` first. A dev release should be
+started once the component prereleases it needs are in the apt repository;
+a stable one once their stable releases are.
+
+If the GitHub release is created but the apt refresh step fails, any rerun
+with the same version stops on the existing tag, "Re-run failed jobs"
+included (it reruns the whole job). The release is already in place: trigger
+the apt repository webhook by hand, or release the next version (`.N+1`, or
+`~dev.M+1`).
+
+The same steps run locally, without network, from fetched indexes:
+
+```
+./calaos_os_release fetch dev calaos-keyring/calaos.list apt-index
+./calaos_os_release prepare dev 2026.12~dev.0 apt-index calaos-meta notes.md
+make test        # offline tests of calaos_os_release, in the builder image
+```
+
+`prepare` rewrites `calaos-meta/debian/{control,changelog}` in place: do not
+commit the result. `prepare` only reads the index files of the channel
+(`<repo>.<component>.<arch>`), so an `apt-index` directory reused from a dev
+fetch does not leak pre-releases into a stable release. The generic workflows
+do not publish `calaos-meta`, which would go out without pins:
+`build_deb_manual.yml` does not offer it and `build_deb.yml` refuses it.
 
 ## Adding or bumping a package
 
@@ -112,7 +170,8 @@ service), then:
 3. add the directory to the `pkgname` options in
    `.github/workflows/build_deb_manual.yml`;
 4. add the package to the `Depends` of `calaos-meta/debian/control` if it
-   must be part of a default install;
+   must be part of a default install, without a version: the Release Calaos
+   OS workflow adds the bound;
 5. test with `make build-<dir> PKGVERSION=0.0.1`.
 
 ## License

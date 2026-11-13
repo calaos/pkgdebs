@@ -9,7 +9,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Refuse calaos-meta
+        if: github.event.client_payload.pkgname == 'calaos-meta'
+        run: |
+          echo "::error::calaos-meta is published by the Release Calaos OS workflow only"
+          exit 1
+
+      - uses: actions/checkout@v4
 
       - name: make-deb-${{ github.event.client_payload.pkgname }}
         run: make build-${{ github.event.client_payload.pkgname }} PKGVERSION=${{ github.event.client_payload.version }} IMAGE_SRC=${{ github.event.client_payload.image_src }}

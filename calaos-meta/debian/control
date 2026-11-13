@@ -13,6 +13,7 @@ Description: Meta package for Calaos-OS
 Depends: calaos-keyring,
          calaos-container,
          calaos-server,
+         calaos-web-app,
          calaos-home,
          calaos-ddns,
          calaos-haproxy,

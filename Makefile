@@ -15,6 +15,8 @@ else
 _NOCACHE=false
 endif
 
+.PHONY: all test
+
 all:
 	$(info )
 	@$(call print_green,"Available commands :")
@@ -25,6 +27,7 @@ all:
 	@ echo "  make docker-shell             # Run docker container and jump into"
 	@ echo "  make docker-rm                # Remove a previous build docker image"
 	@ echo "  make build-|calaos-ddns|calaos-home|calaos-server|calaos-meta|grafana|... # Build Arch package"
+	@ echo "  make test                     # Run the calaos_os_release tests in the builder"
 	@ echo
 	@$(call print_green,"Variables values    :")
 	@$(call print_green,"=====================")
@@ -42,6 +45,9 @@ docker-shell: docker-init
 
 docker-rm:
 	@docker image rm $(DOCKER_IMAGE_NAME):$(DOCKER_TAG)
+
+test: docker-init
+	@$(DOCKER_COMMAND) $(DOCKER_IMAGE_NAME):$(DOCKER_TAG) bash tests/calaos_os_release_test.sh
 
 build-%: docker-init
 	@$(call print_green,"Building $* PKGVERSION=$(PKGVERSION) IMAGE_SRC=$(IMAGE_SRC)")
