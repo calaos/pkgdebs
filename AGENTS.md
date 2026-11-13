@@ -16,7 +16,9 @@ special: `calaos-meta` (meta package, Debian name `calaos`) and
   calaos-web-app, envoy, grafana, haproxy, hue2mqtt, influxdb, mosquitto,
   zigbee2mqtt.
 - Root: `Dockerfile` (bookworm builder), `Makefile` (docker wrapper),
-  `build_deb` (script run inside the builder), `.github/workflows/`.
+  `build_deb` (script run inside the builder), `calaos_os_release`
+  (Calaos OS release of `calaos-meta`, tests in `tests/`),
+  `.github/workflows/`.
 
 ## Commands
 
@@ -34,7 +36,9 @@ for your own build changes) before committing.
 
 ## Verifying a change
 
-No test suite. The check is a build: `make build-<dir> PKGVERSION=0.0.1`
+`make test` runs the offline tests of `calaos_os_release` in the builder
+(they need dpkg, absent on non-Debian hosts). For packaging, the check is a
+build: `make build-<dir> PKGVERSION=0.0.1`
 (runs `dpkg-buildpackage` and `lintian`; lintian errors fail the build).
 Network is needed: `calaos-keyring` downloads
 `https://deb.calaos.fr/calaos/calaos-container/archive.key`, `calaos-web-app`
@@ -45,20 +49,25 @@ Shell scripts can be checked with `bash -n` / `sh -n`.
 
 - A push or PR does NOT build or publish anything: workflows only have
   `repository_dispatch` (`build_deb`) and `workflow_dispatch`
-  (`build_deb_manual.yml`).
+  (`build_deb_manual.yml`, `release_calaos_os.yml`).
+- `release_calaos_os.yml` ("Release Calaos OS") versions and publishes the
+  `calaos` meta package; only the maintainer starts it. See README
+  "Releasing Calaos OS".
 - A dispatch builds, creates a GitHub Release `<pkgname>-<version>` with the
   `.deb`, then calls a webhook so the external apt repo refreshes
   (`deb.calaos.fr/calaos/pkgdebs`, configured in
   `calaos-keyring/calaos.list`). Triggering one publishes for real; do not do
   it without being asked.
 - The version lives nowhere in the repo; `debian/changelog` keeps the
-  placeholder `1.2.3` and `build_deb` substitutes it.
+  placeholder `1.2.3` and `build_deb` substitutes it on line 1 only. The
+  Calaos OS version is read back from the apt repository, not from git.
 
 ## Gotchas
 
 - New package: add it to the `pkgname` choice list in
   `.github/workflows/build_deb_manual.yml` (it is a hard-coded list) and,
-  if needed, to `Depends` in `calaos-meta/debian/control`.
+  if needed, to `Depends` in `calaos-meta/debian/control`, unversioned
+  (`calaos_os_release` refuses a calaos-* entry that has a constraint).
 - Keep the `1.2.3` placeholder in `debian/changelog` and the `VERSION?=`
   line in each `Makefile`; `build_deb` greps for those exact strings.
 - `build_deb` turns only the first `-` of a version into `~`;
@@ -71,6 +80,6 @@ Shell scripts can be checked with `bash -n` / `sh -n`.
 - `.gitignore` also lists directories that do not exist here (calaos-ddns,
   knxd, ola, ...); stale entries.
 - Stale text: `make` help mentions `calaos-ddns` and "Arch package".
-- Workflows use `actions/checkout@v2` and a third-party release action
+- `build_deb*.yml` use `actions/checkout@v2` and a third-party release action
   (`meeDamian/github-release@2.0`).
 - Comments in files: only the why (user convention).

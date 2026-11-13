@@ -1,0 +1,209 @@
+#!/bin/bash
+# Prepares the `calaos` meta package (calaos-meta/) for a Calaos OS release:
+# its version is the Calaos OS version, its Depends pin every calaos-*
+# component to the latest version published in the apt channel, and its
+# changelog lists those versions (the release note).
+
+set -euo pipefail
+
+MAINTAINER="Calaos Team <team@calaos.fr>"
+ARCHES=(all amd64 arm64)
+STABLE_RE='^20[0-9]{2}\.(0[1-9]|1[0-2])(\.[1-9][0-9]*)?$'
+DEV_RE='^20[0-9]{2}\.(0[1-9]|1[0-2])~dev\.(0|[1-9][0-9]*)$'
+
+declare -A LATEST=()
+
+die()
+{
+    echo "error: $*" >&2
+    exit 1
+}
+
+usage()
+{
+    cat >&2 <<EOF
+usage:
+  $0 urls    <stable|dev> <calaos.list>
+  $0 fetch   <stable|dev> <calaos.list> <index dir>
+  $0 prepare <stable|dev> <version> <index dir> <package dir> [notes file]
+
+prepare prints version=<debian version> and tag_version=<git tag version>.
+EOF
+    exit 2
+}
+
+# A dev box sees both components, so a stable version newer than every
+# pre-release must still win there.
+components()
+{
+    case "$1" in
+        stable) echo releases ;;
+        dev) echo releases pre-releases ;;
+        *) die "unknown channel '$1' (expected stable or dev)" ;;
+    esac
+}
+
+cmd_urls()
+{
+    local channel=$1 list=$2 comps found=0 i url suite repo comp arch
+    local -a f
+    comps=$(components "$channel")
+    [[ -r $list ]] || die "cannot read $list"
+    while read -r -a f; do
+        [[ ${f[0]:-} == deb ]] || continue
+        i=1
+        if [[ ${f[1]:-} == \[* ]]; then
+            while ((i < ${#f[@]})) && [[ ${f[$i]} != *']' ]]; do
+                i=$((i + 1))
+            done
+            i=$((i + 1))
+        fi
+        url=${f[$i]:-}
+        suite=${f[$((i + 1))]:-}
+        [[ -n $url && -n $suite ]] || die "malformed line in $list: ${f[*]}"
+        url=${url%/}
+        repo=${url##*/}
+        for comp in $comps; do
+            for arch in "${ARCHES[@]}"; do
+                echo "$repo.$comp.$arch $url/dists/$suite/$comp/binary-$arch/Packages"
+            done
+        done
+        found=1
+    done <"$list"
+    ((found)) || die "no deb line in $list"
+}
+
+cmd_fetch()
+{
+    local channel=$1 list=$2 dir=$3 name url
+    mkdir -p "$dir"
+    cmd_urls "$channel" "$list" | while read -r name url; do
+        echo "fetching $url" >&2
+        curl -fsSL --retry 3 -o "$dir/$name" "$url"
+    done
+}
+
+# Calaos OS versions are calendar based: YYYY.MM, YYYY.MM.N for a second
+# release in the same month, YYYY.MM~dev.N for a pre-release. The git tag
+# form YYYY.MM-dev.N is accepted too.
+normalize_version()
+{
+    local channel=$1 version=${2/-dev./\~dev.}
+    case "$channel" in
+        stable) [[ $version =~ $STABLE_RE ]] ||
+            die "'$2' is not a stable Calaos OS version (YYYY.MM or YYYY.MM.N, N >= 1)" ;;
+        dev) [[ $version =~ $DEV_RE ]] ||
+            die "'$2' is not a dev Calaos OS version (YYYY.MM~dev.N)" ;;
+        *) die "unknown channel '$channel' (expected stable or dev)" ;;
+    esac
+    VERSION=$version
+}
+
+load_latest()
+{
+    local dir=$1 pkg ver f
+    local -a files=()
+    for f in "$dir"/*; do
+        [[ -f $f ]] && files+=("$f")
+    done
+    ((${#files[@]})) || die "no apt index in $dir"
+    while read -r pkg ver; do
+        if [[ -z ${LATEST[$pkg]:-} ]] || dpkg --compare-versions "$ver" gt "${LATEST[$pkg]}"; then
+            LATEST[$pkg]=$ver
+        fi
+    done < <(awk '
+        FNR == 1 { if (p != "" && v != "") print p, v; p = v = "" }
+        /^Package:/ { p = $2 }
+        /^Version:/ { v = $2 }
+        /^[ \t]*$/ { if (p != "" && v != "") print p, v; p = v = "" }
+        END { if (p != "" && v != "") print p, v }
+    ' "${files[@]}" | awk '$1 == "calaos" || $1 ~ /^calaos-/')
+}
+
+control_depends()
+{
+    awk '
+        /^Depends:/ { d = 1; sub(/^Depends:/, ""); print; next }
+        d && /^[ \t]/ { print; next }
+        { d = 0 }
+    ' "$1" | tr ',' '\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$'
+}
+
+cmd_prepare()
+{
+    local channel=$1 version_in=$2 index=$3 pkgdir=$4 notes=${5:-}
+    local control=$pkgdir/debian/control changelog=$pkgdir/debian/changelog
+    local published source entry deps="" date ver
+    local -a entries=() pinned=() missing=()
+
+    normalize_version "$channel" "$version_in"
+    [[ -f $control ]] || die "no $control"
+    [[ -d $index ]] || die "no index directory $index"
+    load_latest "$index"
+
+    published=${LATEST[calaos]:-}
+    if [[ -n $published ]] && ! dpkg --compare-versions "$VERSION" gt "$published"; then
+        die "$VERSION is not greater than the published calaos $published"
+    fi
+
+    mapfile -t entries < <(control_depends "$control")
+    ((${#entries[@]})) || die "no Depends in $control"
+    for entry in "${entries[@]}"; do
+        if [[ $entry =~ ^calaos-[a-z0-9.+-]+$ ]]; then
+            ver=${LATEST[$entry]:-}
+            if [[ -z $ver ]]; then
+                missing+=("$entry")
+                continue
+            fi
+            pinned+=("$entry $ver")
+            entry="$entry (>= $ver)"
+        elif [[ $entry == calaos-* ]]; then
+            die "Depends entry '$entry' already has a constraint: leave calaos-* entries bare"
+        fi
+        deps+="${deps:+,$'\n'         }$entry"
+    done
+    ((${#missing[@]} == 0)) || die "not published in the $channel channel: ${missing[*]}"
+
+    DEPS=$deps awk '
+        /^Depends:/ { print "Depends: " ENVIRON["DEPS"]; skip = 1; next }
+        skip && /^[ \t]/ { next }
+        { skip = 0; print }
+    ' "$control" >"$control.new"
+    mv "$control.new" "$control"
+
+    source=$(awk '/^Source:/ { print $2; exit }' "$control")
+    date=${CALAOS_OS_RELEASE_DATE:-$(date -R)}
+    {
+        echo "$source ($VERSION) bookworm; urgency=medium"
+        echo
+        echo "  * Calaos OS $VERSION ($channel)."
+        for entry in "${pinned[@]}"; do
+            echo "  * $entry"
+        done
+        echo
+        echo " -- $MAINTAINER  $date"
+    } >"$changelog"
+
+    if [[ -n $notes ]]; then
+        {
+            echo "Calaos OS $VERSION ($channel)"
+            echo
+            for entry in "${pinned[@]}"; do
+                echo "- $entry"
+            done
+        } >"$notes"
+    fi
+
+    echo "version=$VERSION"
+    echo "tag_version=${VERSION//\~/-}"
+}
+
+(($# >= 1)) || usage
+cmd=$1
+shift
+case "$cmd" in
+    urls) (($# == 2)) || usage; cmd_urls "$@" ;;
+    fetch) (($# == 3)) || usage; cmd_fetch "$@" ;;
+    prepare) (($# == 4 || $# == 5)) || usage; cmd_prepare "$@" ;;
+    *) usage ;;
+esac
