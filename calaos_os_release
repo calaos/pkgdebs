@@ -12,6 +12,7 @@ STABLE_RE='^20[0-9]{2}\.(0[1-9]|1[0-2])(\.[1-9][0-9]*)?$'
 DEV_RE='^20[0-9]{2}\.(0[1-9]|1[0-2])(\.[1-9][0-9]*)?~dev\.(0|[1-9][0-9]*)$'
 
 declare -A LATEST=() HIGHEST=()
+declare -a CALAOS_VERSIONS=()
 
 die()
 {
@@ -26,7 +27,10 @@ usage:
   $0 urls    <stable|dev> <calaos.list>
   $0 fetch   <stable|dev> <calaos.list> <index dir>
   $0 prepare <stable|dev> <version> <index dir> <package dir> [notes file]
+  $0 next    <stable|dev> <YYYY.MM> [published calaos version...]
 
+An empty <version> makes prepare compute it from the calaos versions of the
+index and the current UTC month; next does the same from its arguments.
 prepare prints version=<debian version> and tag_version=<git tag version>.
 EOF
     exit 2
@@ -99,6 +103,39 @@ normalize_version()
     VERSION=$version
 }
 
+# Pure: the next Calaos OS version of a month (YYYY.MM) given the published
+# calaos versions. Stable: YYYY.MM, then YYYY.MM.N with N above the highest of
+# the month. Dev: the stable that would be computed, then ~dev.M with M above
+# the highest pre-release of that base, from 1.
+next_version()
+{
+    local channel=$1 month=$2 v n max=-1 base dmax=0 m
+    shift 2
+    [[ $month =~ ^20[0-9]{2}\.(0[1-9]|1[0-2])$ ]] || die "'$month' is not a month (YYYY.MM)"
+    for v in "$@"; do
+        if [[ $v =~ $STABLE_RE && $v == "$month"* ]]; then
+            n=${v#"$month"}
+            n=${n#.}
+            n=${n:-0}
+            ((n > max)) && max=$n
+        fi
+    done
+    if ((max < 0)); then base=$month; else base=$month.$((max + 1)); fi
+    case "$channel" in
+        stable) echo "$base" ;;
+        dev)
+            for v in "$@"; do
+                if [[ $v =~ $DEV_RE && $v == "$base~dev."* ]]; then
+                    m=${v##*.}
+                    ((m > dmax)) && dmax=$m
+                fi
+            done
+            echo "$base~dev.$((dmax + 1))"
+            ;;
+        *) die "unknown channel '$channel' (expected stable or dev)" ;;
+    esac
+}
+
 # Index files are named <repo>.<component>.<arch> (cmd_urls). Only the
 # components of the channel are read: a directory filled by a dev fetch must
 # not make a stable release depend on pre-releases.
@@ -119,6 +156,9 @@ load_latest()
     ((${#files[@]})) || die "no apt index of the $channel channel in $dir"
     while read -r arch pkg ver; do
         key="$pkg $arch"
+        # Every version, not the per-arch max: a dev above the month's stable
+        # would otherwise hide that stable from next_version.
+        [[ $pkg == calaos ]] && CALAOS_VERSIONS+=("$ver")
         if [[ -z ${per_arch[$key]:-} ]] || dpkg --compare-versions "$ver" gt "${per_arch[$key]}"; then
             per_arch[$key]=$ver
         fi
@@ -158,10 +198,14 @@ cmd_prepare()
     local published source entry deps="" date ver
     local -a entries=() pinned=() missing=()
 
-    normalize_version "$channel" "$version_in"
     [[ -f $control ]] || die "no $control"
     [[ -d $index ]] || die "no index directory $index"
     load_latest "$channel" "$index"
+    if [[ -z $version_in ]]; then
+        version_in=$(next_version "$channel" "${CALAOS_OS_RELEASE_MONTH:-$(date -u +%Y.%m)}" "${CALAOS_VERSIONS[@]}")
+        echo "computed version $version_in" >&2
+    fi
+    normalize_version "$channel" "$version_in"
 
     published=${HIGHEST[calaos]:-}
     if [[ -n $published ]] && ! dpkg --compare-versions "$VERSION" gt "$published"; then
@@ -226,6 +270,7 @@ shift
 case "$cmd" in
     urls) (($# == 2)) || usage; cmd_urls "$@" ;;
     fetch) (($# == 3)) || usage; cmd_fetch "$@" ;;
+    next) (($# >= 2)) || usage; next_version "$@" ;;
     prepare) (($# == 4 || $# == 5)) || usage; cmd_prepare "$@" ;;
     *) usage ;;
 esac
