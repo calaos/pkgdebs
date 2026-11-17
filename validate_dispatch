@@ -3,11 +3,15 @@
 # and reach make and sed, so nothing outside these patterns may get through.
 # usage: validate_dispatch <pkgname> <version> [image_src]
 
+# Byte-wise ranges: no locale may widen [a-z] or [0-9].
+export LC_ALL=C
+
+ROOT=$(cd "$(dirname "$0")" && pwd)
 PKGNAME_RE='^[a-z0-9][a-z0-9-]*$'
 # 4.8.3, 2.0.22.1, 4.8.2-dev.3 (a dev tag; build_deb turns the first - into ~)
 VERSION_RE='^[0-9]+(\.[0-9]+){0,3}([-~]dev\.[0-9]+)?$'
-# ghcr.io/calaos/calaos_base:4.8.3, docker.io/library/haproxy:2.8.31-alpine
-IMAGE_RE='^(ghcr\.io|docker\.io)(/[a-z0-9][a-z0-9._-]*)+:[A-Za-z0-9][A-Za-z0-9._-]*$'
+# Only the tag of an image may vary: ghcr.io/calaos/calaos_base:4.8.3-rc1
+TAG_RE='^[A-Za-z0-9][A-Za-z0-9._-]*$'
 
 refuse()
 {
@@ -23,8 +27,16 @@ pkgname=$1 version=$2 image_src=${3:-}
 # After the pattern: no case or whitespace variant of the name gets past it.
 [ "$pkgname" != calaos-meta ] ||
     refuse "calaos-meta is published by the Release Calaos OS workflow only"
-[[ $version =~ $VERSION_RE ]] || refuse "version is not like 4.8.3 or 4.8.2-dev.3"
+[ -f "$ROOT/$pkgname/debian/control" ] || refuse "$pkgname is not a package of this repository"
+[[ $version =~ $VERSION_RE ]] ||
+    refuse "version is not like 4.8.3, 4.8.2-dev.3 or 2.0.22.1 (a revision is X.Y.Z.N, not X.Y.Z-N)"
+
 if [ -n "$image_src" ]; then
-    [[ $image_src =~ $IMAGE_RE ]] || refuse "image source is not a ghcr.io or docker.io image:tag"
+    # The image repository is the one the package Makefile pulls by default.
+    default=$(sed -n 's/^IMAGE_SRC?=//p' "$ROOT/$pkgname/Makefile")
+    [ -n "$default" ] || refuse "$pkgname takes no image source"
+    repo=${default%%:*}
+    [[ $image_src == "$repo":* ]] && [[ ${image_src#"$repo":} =~ $TAG_RE ]] ||
+        refuse "image source is not $repo:<tag>"
 fi
 exit 0

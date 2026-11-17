@@ -4,12 +4,17 @@ on:
   repository_dispatch:
     types: [build_deb]
 
+permissions:
+  contents: read
+
 jobs:
   buildEvent:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Validate the payload
         env:

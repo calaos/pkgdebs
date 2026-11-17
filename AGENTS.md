@@ -17,7 +17,8 @@ special: `calaos-meta` (meta package, Debian name `calaos`) and
   zigbee2mqtt.
 - Root: `Dockerfile` (bookworm builder), `Makefile` (docker wrapper),
   `build_deb` (script run inside the builder), `calaos_os_release`
-  (Calaos OS release of `calaos-meta`, tests in `tests/`),
+  (Calaos OS release of `calaos-meta`), `validate_dispatch` (gate on the
+  dispatch inputs; tests of both scripts in `tests/`),
   `.github/workflows/`.
 
 ## Commands
@@ -36,8 +37,9 @@ for your own build changes) before committing.
 
 ## Verifying a change
 
-`make test` runs the offline tests of `calaos_os_release` in the builder
-(they need dpkg, absent on non-Debian hosts). For packaging, the check is a
+`make test` runs the offline tests of `calaos_os_release` and
+`validate_dispatch` in the builder (the first needs dpkg, absent on
+non-Debian hosts; the second needs bash only). For packaging, the check is a
 build: `make build-<dir> PKGVERSION=0.0.1`
 (runs `dpkg-buildpackage` and `lintian`; lintian errors fail the build).
 Network is needed: `calaos-keyring` downloads
@@ -64,6 +66,14 @@ Shell scripts can be checked with `bash -n` / `sh -n`.
 
 ## Gotchas
 
+- `build_deb*.yml` run `validate_dispatch` before anything else; the dispatch
+  inputs reach the shell only through `env:`, never `${{ }}` inside `run:`.
+  It accepts: `pkgname` = `[a-z0-9-]+`, a directory with `debian/control`,
+  not `calaos-meta`; `version` = `X.Y.Z[.N]` or `X.Y.Z-dev.N` (a revision is
+  `X.Y.Z.N`, never `X.Y.Z-N`); `image_src` empty or `<repo>:<tag>`, where
+  `<repo>` is the one in the package Makefile's `IMAGE_SRC?=` (the unit runs
+  the image `--privileged`, so only the tag may vary).
+
 - New package: add it to the `pkgname` choice list in
   `.github/workflows/build_deb_manual.yml` (it is a hard-coded list) and,
   if needed, to `Depends` in `calaos-meta/debian/control`, unversioned
@@ -80,6 +90,6 @@ Shell scripts can be checked with `bash -n` / `sh -n`.
 - `.gitignore` also lists directories that do not exist here (calaos-ddns,
   knxd, ola, ...); stale entries.
 - Stale text: `make` help mentions `calaos-ddns` and "Arch package".
-- `build_deb*.yml` use `actions/checkout@v2` and a third-party release action
+- `build_deb*.yml` use a third-party release action
   (`meeDamian/github-release@2.0`).
 - Comments in files: only the why (user convention).

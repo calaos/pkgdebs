@@ -25,13 +25,16 @@ on:
         description: 'Package version'
         required: true
       image_src:
-        description: 'Image source'
-        required: true
+        description: 'Image source (empty: the package default)'
+        required: false
       prerelease:
         description: 'Is this a prerelease?'
         required: true
         type: boolean
   
+
+permissions:
+  contents: read
 
 jobs:
   buildEvent:
@@ -39,6 +42,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Validate the payload
         env:

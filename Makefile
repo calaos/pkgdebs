@@ -47,7 +47,7 @@ docker-rm:
 	@docker image rm $(DOCKER_IMAGE_NAME):$(DOCKER_TAG)
 
 test: docker-init
-	@$(DOCKER_COMMAND) $(DOCKER_IMAGE_NAME):$(DOCKER_TAG) bash tests/calaos_os_release_test.sh
+	@$(DOCKER_COMMAND) $(DOCKER_IMAGE_NAME):$(DOCKER_TAG) sh -c "bash tests/calaos_os_release_test.sh && bash tests/validate_dispatch_test.sh"
 
 build-%: docker-init
 	@$(call print_green,"Building $* PKGVERSION=$(PKGVERSION) IMAGE_SRC=$(IMAGE_SRC)")
