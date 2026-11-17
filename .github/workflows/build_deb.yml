@@ -21,7 +21,7 @@ jobs:
           PKGNAME: ${{ github.event.client_payload.pkgname }}
           VERSION: ${{ github.event.client_payload.version }}
           IMAGE_SRC: ${{ github.event.client_payload.image_src }}
-        run: ./validate_dispatch "$PKGNAME" "$VERSION" "$IMAGE_SRC"
+        run: ./validate_dispatch --image-required "$PKGNAME" "$VERSION" "$IMAGE_SRC"
 
       - name: Build the deb
         env:

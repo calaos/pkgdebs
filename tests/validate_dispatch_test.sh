@@ -93,6 +93,28 @@ check ok --image-required calaos-server 4.8.3 ghcr.io/calaos/calaos_base:4.8.3
 check ok --image-required calaos-keyring 1.0.0
 check ok --image-required calaos-web-app 4.8.3 ""
 
+# Replay the exact step of build_deb.yml (the dispatch path) with a payload.
+# ok|bad <pkgname> <version> <image_src>
+replay()
+{
+    local want=$1 cmd rc=0
+    cmd=$(sed -n 's/^ *run: \(\.\/validate_dispatch .*\)$/\1/p' "$ROOT/.github/workflows/build_deb.yml")
+    [ -n "$cmd" ] || { fail "validate step not found in build_deb.yml"; return; }
+    (cd "$ROOT" && PKGNAME=$2 VERSION=$3 IMAGE_SRC=$4 bash -c "$cmd") >"$TMP/out" 2>&1 || rc=$?
+    if [ "$want" = ok ] && [ "$rc" -ne 0 ]; then
+        fail "replay refused: $(printf '%q ' "${@:2}")"
+    elif [ "$want" = bad ] && [ "$rc" -ne 1 ]; then
+        fail "replay accepted or crashed (rc=$rc): $(printf '%q ' "${@:2}")"
+    fi
+}
+
+replay ok calaos-server 4.8.3 ghcr.io/calaos/calaos_base:4.8.3
+replay ok calaos-home 4.8.3 ghcr.io/calaos/calaos_home:4.8.3
+replay ok calaos-web-app 4.8.3 ""
+# The flag must not be consumable from the payload (arguments shifted by one).
+replay bad --image-required calaos-keyring 4.8.3
+replay bad --image-required --image-required calaos-keyring
+
 # Tag length: at most 128 characters.
 tag128=$(printf 'a%.0s' $(seq 128))
 check ok calaos-server 4.8.3 "ghcr.io/calaos/calaos_base:$tag128"
