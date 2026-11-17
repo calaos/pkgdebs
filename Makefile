@@ -27,7 +27,7 @@ all:
 	@ echo "  make docker-shell             # Run docker container and jump into"
 	@ echo "  make docker-rm                # Remove a previous build docker image"
 	@ echo "  make build-|calaos-ddns|calaos-home|calaos-server|calaos-meta|grafana|... # Build Arch package"
-	@ echo "  make test                     # Run the calaos_os_release tests in the builder"
+	@ echo "  make test                     # Run the calaos_os_release and validate_dispatch tests in the builder"
 	@ echo
 	@$(call print_green,"Variables values    :")
 	@$(call print_green,"=====================")

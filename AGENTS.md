@@ -70,7 +70,8 @@ Shell scripts can be checked with `bash -n` / `sh -n`.
   inputs reach the shell only through `env:`, never `${{ }}` inside `run:`.
   It accepts: `pkgname` = `[a-z0-9-]+`, a directory with `debian/control`,
   not `calaos-meta`; `version` = `X.Y.Z[.N]` or `X.Y.Z-dev.N` (a revision is
-  `X.Y.Z.N`, never `X.Y.Z-N`); `image_src` empty or `<repo>:<tag>`, where
+  `X.Y.Z.N`, never `X.Y.Z-N`); `image_src` empty or `<repo>:<tag>` (tag at most 128 characters; a manual run, with
+  `--image-required`, refuses an empty one for a package that has an image), where
   `<repo>` is the one in the package Makefile's `IMAGE_SRC?=` (the unit runs
   the image `--privileged`, so only the tag may vary).
 

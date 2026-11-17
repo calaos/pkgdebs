@@ -87,6 +87,28 @@ check bad calaos-server 4.8.3 "ghcr.io/Calaos/x:1"
 check bad calaos-server
 check bad calaos-server 4.8.3 ghcr.io/calaos/calaos_base:1 extra
 
+check bad --image-required calaos-server 4.8.3
+check bad --image-required calaos-server 4.8.3 ""
+check ok --image-required calaos-server 4.8.3 ghcr.io/calaos/calaos_base:4.8.3
+check ok --image-required calaos-keyring 1.0.0
+check ok --image-required calaos-web-app 4.8.3 ""
+
+# Tag length: at most 128 characters.
+tag128=$(printf 'a%.0s' $(seq 128))
+check ok calaos-server 4.8.3 "ghcr.io/calaos/calaos_base:$tag128"
+check bad calaos-server 4.8.3 "ghcr.io/calaos/calaos_base:${tag128}a"
+
+# A registry with a port: only the last :tag is dropped to get the repository.
+mkdir -p "$TMP/fake/portpkg/debian"
+cp "$SCRIPT" "$TMP/fake/validate_dispatch"
+touch "$TMP/fake/portpkg/debian/control"
+echo 'IMAGE_SRC?=localhost:5000/calaos/x:$(VERSION)' >"$TMP/fake/portpkg/Makefile"
+SCRIPT=$TMP/fake/validate_dispatch
+check ok portpkg 1.0.0 localhost:5000/calaos/x:1.0.0
+check bad portpkg 1.0.0 localhost:5000/evil/x:1.0.0
+check bad portpkg 1.0.0 localhost:6000/calaos/x:1.0.0
+check bad portpkg 1.0.0 localhost:5000/calaos/x
+
 if [ "$failures" -ne 0 ]; then
     echo "$failures failure(s)"
     exit 1

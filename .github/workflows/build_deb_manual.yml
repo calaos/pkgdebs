@@ -25,7 +25,7 @@ on:
         description: 'Package version'
         required: true
       image_src:
-        description: 'Image source (empty: the package default)'
+        description: 'Image source (empty only for a package without an image)'
         required: false
       prerelease:
         description: 'Is this a prerelease?'
@@ -50,7 +50,7 @@ jobs:
           PKGNAME: ${{ github.event.inputs.pkgname }}
           VERSION: ${{ github.event.inputs.version }}
           IMAGE_SRC: ${{ github.event.inputs.image_src }}
-        run: ./validate_dispatch "$PKGNAME" "$VERSION" "$IMAGE_SRC"
+        run: ./validate_dispatch --image-required "$PKGNAME" "$VERSION" "$IMAGE_SRC"
 
       - name: Build the deb
         env:
