@@ -1,0 +1,30 @@
+#!/bin/bash
+# Gate for the build_deb workflows: their inputs come from a dispatch payload
+# and reach make and sed, so nothing outside these patterns may get through.
+# usage: validate_dispatch <pkgname> <version> [image_src]
+
+PKGNAME_RE='^[a-z0-9][a-z0-9-]*$'
+# 4.8.3, 2.0.22.1, 4.8.2-dev.3 (a dev tag; build_deb turns the first - into ~)
+VERSION_RE='^[0-9]+(\.[0-9]+){0,3}([-~]dev\.[0-9]+)?$'
+# ghcr.io/calaos/calaos_base:4.8.3, docker.io/library/haproxy:2.8.31-alpine
+IMAGE_RE='^(ghcr\.io|docker\.io)(/[a-z0-9][a-z0-9._-]*)+:[A-Za-z0-9][A-Za-z0-9._-]*$'
+
+refuse()
+{
+    echo "::error::$1"
+    exit 1
+}
+
+[ $# -ge 2 ] && [ $# -le 3 ] || refuse "usage: validate_dispatch <pkgname> <version> [image_src]"
+
+pkgname=$1 version=$2 image_src=${3:-}
+
+[[ $pkgname =~ $PKGNAME_RE ]] || refuse "package name is not [a-z0-9-]+"
+# After the pattern: no case or whitespace variant of the name gets past it.
+[ "$pkgname" != calaos-meta ] ||
+    refuse "calaos-meta is published by the Release Calaos OS workflow only"
+[[ $version =~ $VERSION_RE ]] || refuse "version is not like 4.8.3 or 4.8.2-dev.3"
+if [ -n "$image_src" ]; then
+    [[ $image_src =~ $IMAGE_RE ]] || refuse "image source is not a ghcr.io or docker.io image:tag"
+fi
+exit 0

@@ -40,9 +40,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: make-deb-${{ github.event.inputs.pkgname }}
-        run: make build-${{ github.event.inputs.pkgname }} PKGVERSION=${{ github.event.inputs.version }} IMAGE_SRC=${{ github.event.inputs.image_src }}
-      
+      - name: Validate the payload
+        env:
+          PKGNAME: ${{ github.event.inputs.pkgname }}
+          VERSION: ${{ github.event.inputs.version }}
+          IMAGE_SRC: ${{ github.event.inputs.image_src }}
+        run: ./validate_dispatch "$PKGNAME" "$VERSION" "$IMAGE_SRC"
+
+      - name: Build the deb
+        env:
+          PKGNAME: ${{ github.event.inputs.pkgname }}
+          VERSION: ${{ github.event.inputs.version }}
+          IMAGE_SRC: ${{ github.event.inputs.image_src }}
+        run: make "build-$PKGNAME" PKGVERSION="$VERSION" IMAGE_SRC="$IMAGE_SRC"
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
