@@ -4,22 +4,32 @@ on:
   repository_dispatch:
     types: [build_deb]
 
+permissions:
+  contents: read
+
 jobs:
   buildEvent:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Refuse calaos-meta
-        if: github.event.client_payload.pkgname == 'calaos-meta'
-        run: |
-          echo "::error::calaos-meta is published by the Release Calaos OS workflow only"
-          exit 1
-
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
-      - name: make-deb-${{ github.event.client_payload.pkgname }}
-        run: make build-${{ github.event.client_payload.pkgname }} PKGVERSION=${{ github.event.client_payload.version }} IMAGE_SRC=${{ github.event.client_payload.image_src }}
-      
+      - name: Validate the payload
+        env:
+          PKGNAME: ${{ github.event.client_payload.pkgname }}
+          VERSION: ${{ github.event.client_payload.version }}
+          IMAGE_SRC: ${{ github.event.client_payload.image_src }}
+        run: ./validate_dispatch --image-required "$PKGNAME" "$VERSION" "$IMAGE_SRC"
+
+      - name: Build the deb
+        env:
+          PKGNAME: ${{ github.event.client_payload.pkgname }}
+          VERSION: ${{ github.event.client_payload.version }}
+          IMAGE_SRC: ${{ github.event.client_payload.image_src }}
+        run: make "build-$PKGNAME" PKGVERSION="$VERSION" IMAGE_SRC="$IMAGE_SRC"
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:

@@ -85,7 +85,7 @@ Two GitHub Actions workflows build and release:
   of type `build_deb` with `client_payload` fields `pkgname`, `version`,
   `image_src`, `prerelease`. Used to trigger builds from other repositories.
 - `.github/workflows/build_deb_manual.yml`: `workflow_dispatch` with inputs
-  `pkgname` (a choice list), `version`, `image_src` (required), `prerelease`.
+  `pkgname` (a choice list), `version`, `image_src` (required for a package that has an image), `prerelease`.
 
 Both run `make build-<pkgname> PKGVERSION=... IMAGE_SRC=...`, upload `pkg/*.deb`
 as a workflow artifact, create a GitHub Release tagged `<pkgname>-<version>`
